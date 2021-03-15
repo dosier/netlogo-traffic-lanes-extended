@@ -108,6 +108,12 @@ to move ; turtle procedure
       die
     ]
   ]
+  if west-queue = active-queue and member? self west-queue[
+    set west-queue remove self west-queue
+  ]
+  if south-queue = active-queue and member? self south-queue[
+    set south-queue remove self south-queue
+  ]
 end
 
 to update-wait-ticks
