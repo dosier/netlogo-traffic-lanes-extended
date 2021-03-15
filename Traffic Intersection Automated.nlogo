@@ -56,18 +56,7 @@ to go
   make-new-car freq-north 0 min-pycor 0 south-queue
   make-new-car freq-east min-pxcor 0 90 west-queue
 
-  ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
-  let south-cum-wait extension:sum-turtle-list south-queue "wait-ticks" eval-cars
-  let west-cum-wait extension:sum-turtle-list west-queue "wait-ticks" eval-cars
-
-  ; update the active queue if the cum wait time of the other queue
-  ; exceeds the cum wait time of the currently active queue
-  if active-queue = south-queue and west-cum-wait > south-cum-wait [
-    set active-queue west-queue
-  ]
-  if active-queue = west-queue and south-cum-wait > west-cum-wait [
-    set active-queue south-queue
-  ]
+  update-active-queue
 
   ; if we are in "auto" mode and a light has been
   ; green for long enough, we turn it yellow
@@ -80,6 +69,19 @@ to go
     change-to-red
   ]
   tick
+end
+
+; update the active queue if the cum wait time of the passive queue
+; exceeds the cum wait time of the active queue
+to update-active-queue
+
+  ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
+  let south-cum-wait extension:sum-turtle-list south-queue "wait-ticks" eval-cars
+  let west-cum-wait extension:sum-turtle-list west-queue "wait-ticks" eval-cars
+
+  ifelse west-cum-wait > south-cum-wait
+  [ set active-queue west-queue ]
+  [ set active-queue south-queue ]
 end
 
 to make-new-car [ freq x y h queue]
