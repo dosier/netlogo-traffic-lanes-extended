@@ -98,6 +98,7 @@ end
 
 to move ; turtle procedure
   adjust-speed
+  update-wait-ticks;
   repeat speed [ ; move ahead the correct amount
     fd 1
     if not can-move? 1 [ die ] ; die when I reach the end of the world
@@ -106,6 +107,14 @@ to move ; turtle procedure
       ask accidents-here [ set clear-in 5 ]
       die
     ]
+  ]
+end
+
+to update-wait-ticks
+  ifelse speed = 0 [
+    set wait-ticks wait-ticks + 1
+  ][
+    set wait-ticks 0
   ]
 end
 
