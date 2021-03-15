@@ -1,5 +1,3 @@
-extensions [ extension ]
-
 globals [
   ticks-at-last-change  ; value of the tick counter the last time a light changed
   active-queue          ; the queue that is currently being processed
@@ -53,8 +51,8 @@ end
 to go
   ask cars [ move ]
   check-for-collisions
-  make-new-car freq-north 0 min-pycor 0 south-queue
-  make-new-car freq-east min-pxcor 0 90 west-queue
+  set south-queue make-new-car freq-north 0 min-pycor 0 south-queue
+  set west-queue make-new-car freq-east min-pxcor 0 90 west-queue
 
   update-active-queue
 
@@ -76,15 +74,16 @@ end
 to update-active-queue
 
   ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
-  let south-cum-wait extension:sum-turtle-list south-queue "wait-ticks" eval-cars
-  let west-cum-wait extension:sum-turtle-list west-queue "wait-ticks" eval-cars
+  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue]
+  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue]
 
+  show south-queue
   ifelse west-cum-wait > south-cum-wait
   [ set active-queue west-queue ]
   [ set active-queue south-queue ]
 end
 
-to make-new-car [ freq x y h queue]
+to-report make-new-car [ freq x y h queue]
   if (random-float 100 < freq) and not any? turtles-on patch x y [
     create-cars 1 [
       setxy x y
@@ -94,6 +93,7 @@ to make-new-car [ freq x y h queue]
       adjust-speed
     ]
   ]
+  report queue
 end
 
 to move ; turtle procedure
@@ -111,11 +111,19 @@ to move ; turtle procedure
 end
 
 to update-wait-ticks
-  ifelse speed = 0 [
+  ifelse is-waiting [
     set wait-ticks wait-ticks + 1
   ][
     set wait-ticks 0
   ]
+end
+
+; check if the car is in the non-active queue and its speed is 0
+to-report is-waiting
+  report
+    (member? self west-queue or member? self south-queue)
+    and not member? self active-queue
+    and speed = 0
 end
 
 to adjust-speed
@@ -429,10 +437,10 @@ count cars with [ heading = 90 and speed = 0 ]
 11
 
 MONITOR
-574
-168
-707
-213
+575
+165
+708
+210
 waiting-northbound
 count cars with [ heading = 0 and speed = 0 ]
 0
@@ -485,11 +493,33 @@ eval-cars
 eval-cars
 0
 10
-1.0
+4.0
 1
 1
 NIL
 HORIZONTAL
+
+MONITOR
+710
+165
+860
+210
+queue size northbound
+length south-queue
+17
+1
+11
+
+MONITOR
+710
+120
+860
+165
+queue size eastbound
+length west-queue
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
