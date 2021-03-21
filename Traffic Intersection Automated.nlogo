@@ -1,11 +1,11 @@
 globals [
   ticks-at-last-change  ; value of the tick counter the last time a light changed
-  active-queue          ; the queue that is currently being processed
-  west-queue            ; the car queue for the west-east lane
-  south-queue           ; the car queue for the south-north lane
-  west-light
-  south-light
-  total-accident
+  active-queue          ;* the queue that is currently being processed
+  west-queue            ;* the car queue for the west-east lane
+  south-queue           ;* the car queue for the south-north lane
+  west-light            ;*
+  south-light           ;*
+  total-accident        ;*
 ]
 
 breed [ lights light ]
@@ -18,7 +18,7 @@ accidents-own [
 breed [ cars car ]
 cars-own [
   speed                 ; how many patches per tick the car moves
-  wait-ticks            ; how many ticks the car has been in the queue for
+  wait-ticks            ;* how many ticks the car has been in the queue for
 ]
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -32,21 +32,20 @@ to setup
   set-default-shape cars "car"
 
   ; initialise queues (lists) for both lanes
-  set west-queue []
-  set south-queue []
-  set active-queue south-queue
-
+  set west-queue [] ;*
+  set south-queue [] ;*
+  set active-queue south-queue ;*
 
   ask patches [
     ifelse abs pxcor <= 1 or abs pycor <= 1
       [ set pcolor black ]     ; the roads are black
       [ set pcolor green - 1 ] ; and the grass is green
   ]
-  ask patch 0 -1 [ sprout-lights 1 [ set color red ] ]
-  ask patch -1 0 [ sprout-lights 1 [ set color green ] ]
+  ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
+  ask patch -1 0 [ sprout-lights 1 [ set color red ] ]
   
-  set west-light lights at-points [[-1 0]]
-  set south-light lights at-points [[0 -1]]
+  set west-light lights at-points [[-1 0]] ;*
+  set south-light lights at-points [[0 -1]] ;*
   
   reset-ticks
 end
@@ -58,12 +57,21 @@ end
 to go
   ask cars [ move ]
   check-for-collisions
-  set south-queue make-new-car freq-north 0 min-pycor 0 south-queue
-  set west-queue make-new-car freq-east min-pxcor 0 90 west-queue
+  set west-queue filter-queue west-queue ;*
+  set south-queue filter-queue south-queue ;*
+;  set west-queue 
+;        if west-queue = active-queue and member? self west-queue[ ;*
+;        set west-queue remove self west-queue ;*
+;      ] 
+;      if south-queue = active-queue and member? self south-queue[ ;*
+;        set south-queue remove self south-queue ;*
+;      ]
+  set south-queue make-new-car freq-north 0 min-pycor 0 south-queue ;*
+  set west-queue make-new-car freq-east min-pxcor 0 90 west-queue ;*
 
-  update-active-queue
+  update-active-queue ;*
 
-  if traffic-light?[
+  if traffic-light?[ ;*
     ; if we are in "auto" mode and a light has been
     ; green for long enough, we turn it yellow
     if auto? and elapsed? green-length [
@@ -79,29 +87,42 @@ to go
   tick
 end
 
+to-report filter-queue [queue];*
+  set queue filter [c -> c != nobody] queue ;*
+  ask turtles with [member? self queue][ ;*
+    ifelse queue = west-queue[ ;*
+      if pxcor > -1 [ set queue remove self queue ] ;*
+    ][
+      if pycor > -1 [ set queue remove self queue ] ;*
+    ]
+  ]
+  report queue ;*
+end
+
 ; update the active queue if the cum wait time of the passive queue
 ; exceeds the cum wait time of the active queue
-to update-active-queue
+to update-active-queue ;*
 
   ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
-  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue]
-  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue]
+  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue] ;*
+  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue] ;*
 
-;  show south-queuer
+  show south-queue
+  show west-queue
 
-  ifelse west-cum-wait > south-cum-wait
+  ifelse west-cum-wait > south-cum-wait ;*
   [ 
-    set active-queue west-queue 
-    if not traffic-light? [
-      ask west-light [ set color green ]
-      ask south-light [ set color red ]
+    set active-queue west-queue ;*
+    if not traffic-light? [ ;*
+      ask west-light [ set color green ] ;*
+      ask south-light [ set color red ] ;*
     ]
   ]
   [ 
-    set active-queue south-queue 
-    if not traffic-light? [
-      ask south-light [ set color green ]
-      ask west-light [ set color red ]
+    set active-queue south-queue  ;*
+    if not traffic-light? [ ;*
+      ask south-light [ set color green ] ;*
+      ask west-light [ set color red ] ;*
     ]
   ]
 end
@@ -112,16 +133,16 @@ to-report make-new-car [ freq x y h queue]
       setxy x y
       set heading h
       set color one-of base-colors
-      set queue lput self queue ; add car at end of queue
+      set queue lput self queue ; add car at end of queue ;*
       adjust-speed
     ]
   ]
-  report queue
+  report queue ;*
 end
 
 to move ; turtle procedure
   adjust-speed
-  update-wait-ticks;
+  update-wait-ticks ;*
   repeat speed [ ; move ahead the correct amount
     fd 1
     if not can-move? 1 [ die ] ; die when I reach the end of the world
@@ -131,29 +152,23 @@ to move ; turtle procedure
       die
     ]
   ]
-  if west-queue = active-queue and member? self west-queue[
-    set west-queue remove self west-queue
-  ]
-  if south-queue = active-queue and member? self south-queue[
-    set south-queue remove self south-queue
-  ]
 end
 
-to update-wait-ticks
-  ifelse is-waiting [
-    set wait-ticks wait-ticks + 1
+to update-wait-ticks ;*
+  ifelse is-waiting [ ;*
+    set wait-ticks wait-ticks + 1 ;*
   ][
-    set wait-ticks 0
+    set wait-ticks 0 ;*
   ]
 end
 
 ; check if the car is in the non-active queue and its speed is 0
-to-report is-waiting
-  report
-    (member? self west-queue or member? self south-queue)
-    and not member? self active-queue
-    and speed = 0
-end
+to-report is-waiting ;*
+  report ;*
+    (member? self west-queue or member? self south-queue) ;*
+    and not member? self active-queue ;*
+    and speed = 0 ;*
+end ;*
 
 to adjust-speed
 
@@ -220,7 +235,7 @@ to check-for-collisions
       set color yellow
       set clear-in 5
     ]
-    set total-accident total-accident + 1
+    set total-accident total-accident + 1 ;*
     ask cars-here [ die ]
   ]
 end
