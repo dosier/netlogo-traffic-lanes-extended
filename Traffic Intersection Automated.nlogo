@@ -5,6 +5,7 @@ globals [
   south-queue           ; the car queue for the south-north lane
   west-light
   south-light
+  total-accident
 ]
 
 breed [ lights light ]
@@ -41,15 +42,12 @@ to setup
       [ set pcolor black ]     ; the roads are black
       [ set pcolor green - 1 ] ; and the grass is green
   ]
-  ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
+  ask patch 0 -1 [ sprout-lights 1 [ set color red ] ]
   ask patch -1 0 [ sprout-lights 1 [ set color green ] ]
   
   set west-light lights at-points [[-1 0]]
   set south-light lights at-points [[0 -1]]
   
-  ask west-light [
-    set color blue
-  ]
   reset-ticks
 end
 
@@ -89,7 +87,8 @@ to update-active-queue
   let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue]
   let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue]
 
-  show south-queue
+;  show south-queuer
+
   ifelse west-cum-wait > south-cum-wait
   [ 
     set active-queue west-queue 
@@ -221,6 +220,7 @@ to check-for-collisions
       set color yellow
       set clear-in 5
     ]
+    set total-accident total-accident + 1
     ask cars-here [ die ]
   ]
 end
