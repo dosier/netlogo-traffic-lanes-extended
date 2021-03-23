@@ -1,16 +1,23 @@
 globals [
   ticks-at-last-change  ; value of the tick counter the last time a light changed
   active-queue          ;* the queue that is currently being processed
+  active-second-queue   ;* the second active queue
   west-queue            ;* the car queue for the west-east lane
   south-queue           ;* the car queue for the south-north lane
+  west-second-queue     ;* the car queue for the west-east lane
+  south-second-queue    ;* the car queue for the south-north lane
   west-light            ;*
+  west-second-light     ;*
   south-light           ;*
+  south-second-light    ;*
   total-accident        ;*
   passed-cars           ;*
+  total-wait-time       ;*
+  total-cars            ;*
 ]
 
 breed [ lights light ]
-
+breed [ flowers flower ]
 breed [ accidents accident ]
 accidents-own [
   clear-in              ; how many ticks before an accident is cleared
@@ -21,7 +28,7 @@ cars-own [
   speed                 ; how many patches per tick the car moves
   wait-ticks            ;* how many ticks the car has been in the queue for
   passed                ;* boolean representing whether car passed traffic lights
-  turn                  ;* boolean representing whether car turns or goes straight
+  queue-id              ;* id of the queue this car spawned in
 ]
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -33,23 +40,42 @@ to setup
   set-default-shape lights "square"
   set-default-shape accidents "fire"
   set-default-shape cars "car"
-
-  ; initialise queues (lists) for both lanes
+  set-default-shape flowers "flower"
   set west-queue [] ;*
   set south-queue [] ;*
+  set west-second-queue [] ;*
+  set south-second-queue [] ;*
   set active-queue south-queue ;*
+  set active-second-queue south-second-queue ;*
+  set total-cars 0 ;*
 
-  ask patches [
-    ifelse abs pxcor <= 1 or abs pycor <= 1
+  ; initialise queues (lists) for lanes
+  ifelse double-lane? [
+    ask patches [
+      ifelse ((1 <= pxcor and pxcor <= 3) or (-3 <= pxcor and pxcor <= -1)) or ((1 <= pycor and pycor <= 3) or (-3 <= pycor and pycor <= -1))
       [ set pcolor black ]     ; the roads are black
       [ set pcolor green - 1 ] ; and the grass is green
+    ]
+    ask patch -2 -3 [ sprout-lights 1 [ set color red ] ]
+    ask patch -3 -2 [ sprout-lights 1 [ set color green ] ]
+    ask patch -3 2 [ sprout-lights 1 [ set color green ] ]
+    ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]
+    set west-light one-of lights at-points [[-2 -3]] ;*
+    set west-second-light one-of lights at-points [[2 -3]] ;*
+    set south-light one-of lights at-points [[-3 -2]] ;*
+    set south-second-light one-of lights at-points [[-3 2]] ;*
   ]
-  ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
-  ask patch -1 0 [ sprout-lights 1 [ set color red ] ]
-
-  set west-light lights at-points [[-1 0]] ;*
-  set south-light lights at-points [[0 -1]] ;*
-
+  [
+    ask patches [
+      ifelse abs pxcor <= 1 or abs pycor <= 1
+      [ set pcolor black ]     ; the roads are black
+      [ set pcolor green - 1 ] ; and the grass is green
+    ]
+    ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
+    ask patch -1 0 [ sprout-lights 1 [ set color red ] ]
+    set west-light one-of lights at-points [[-1 0]] ;*
+    set south-light one-of lights at-points [[0 -1]] ;*
+  ]
   reset-ticks
 end
 
@@ -60,12 +86,26 @@ end
 to go
   ask cars [ move ]
   check-for-collisions
-  set west-queue filter-queue west-queue ;*
-  set south-queue filter-queue south-queue ;*
-  set south-queue make-new-car freq-north 0 min-pycor 0 south-queue ;*
-  set west-queue make-new-car freq-east min-pxcor 0 90 west-queue ;*
+  ifelse double-lane?
+  [
+    set west-queue filter-queue west-queue ;*
+    set south-queue filter-queue south-queue ;*
+    set west-second-queue filter-queue west-second-queue ;*
+    set south-second-queue filter-queue south-second-queue ;*
+    set south-queue make-new-car freq-north -2 min-pycor 0 south-queue 0              ;*
+    set west-queue make-new-car freq-east min-pxcor -2 90 west-queue 1                ;*
+    set south-second-queue make-new-car freq-north 2 min-pycor 0 south-second-queue 2 ;*
+    set west-second-queue make-new-car freq-east min-pxcor 2 90 west-second-queue 3   ;*
+  ]
+  [
+    set west-queue filter-queue west-queue ;*
+    set south-queue filter-queue south-queue ;*
+    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0 ;*
+    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1   ;*
+  ]
 
   update-active-queue ;*
+  set total-wait-time total-wait-time + sum [wait-ticks] of cars
 
   if traffic-light?[ ;*
     ; if we are in "auto" mode and a light has been
@@ -88,7 +128,7 @@ end
 to-report filter-queue [queue] ;*
   set queue filter [c -> c != nobody] queue ;*
   ask turtles with [member? self queue][ ;*
-    ifelse queue = west-queue[ ;*
+    ifelse queue = west-queue or queue = west-second-queue[ ;*
       if pxcor > -1 [ set queue remove self queue ] ;*
     ][
       if pycor > -1 [ set queue remove self queue ] ;*
@@ -102,38 +142,48 @@ end
 to update-active-queue ;*
 
   ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
-  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue] ;*
-  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue] ;*
+  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self south-second-queue] ;*
+  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self west-second-queue] ;*
 
-  show south-queue
-  show west-queue
+;  show south-queue
+;  show west-queue
 
   ifelse west-cum-wait > south-cum-wait ;*
   [
     set active-queue west-queue ;*
+    set active-second-queue west-second-queue ;*
     if not traffic-light? [ ;*
       ask west-light [ set color green ] ;*
       ask south-light [ set color red ] ;*
+      if double-lane? [
+        ask west-second-light [ set color green ] ;*
+        ask south-second-light [ set color red ] ;*
+      ]
     ]
   ]
   [
     set active-queue south-queue  ;*
+    set active-second-queue south-second-queue ;*
     if not traffic-light? [ ;*
       ask south-light [ set color green ] ;*
       ask west-light [ set color red ] ;*
+      if double-lane? [
+        ask west-second-light [ set color red ] ;*
+        ask south-second-light [ set color green ] ;*
+      ]
     ]
   ]
 end
 
-to-report make-new-car [ freq x y h queue]
-
+to-report make-new-car [ freq x y h queue queue-identifier] ;*
   if (random-float 100 < freq) and not any? turtles-on patch x y [
     create-cars 1 [
       setxy x y
       set heading h
       set color one-of base-colors
-      set turn random-float 1 < 0.5 ;*
       set queue lput self queue     ;* add car at end of queue
+      set queue-id queue-identifier ;* id of the queue
+      set total-cars total-cars + 1
       adjust-speed
     ]
   ]
@@ -168,8 +218,10 @@ end
 ; check if the car is in the non-active queue and its speed is 0
 to-report is-waiting ;*
   report ;*
-    (member? self west-queue or member? self south-queue) ;*
-    and not member? self active-queue ;*
+    (member? self west-queue or member? self south-queue                   ;*
+     or member? self west-second-queue or member? self south-second-queue) ;*
+    and not member? self active-queue                                      ;*
+    and not member? self active-second-queue                               ;*
     and speed = 0 ;*
 end ;*
 
@@ -250,11 +302,42 @@ to change-to-yellow
   ]
 end
 
+to update-light [col]
+  set color col
+  set ticks-at-last-change ticks
+end
+
+to-report is-west-light [l]
+  ifelse double-lane? [ report l = west-light or l = west-second-light ]
+  [ report l = west-light ]
+end
+
+to-report is-south-light [l]
+  ifelse double-lane? [ report l = south-light or l = south-second-light ]
+  [ report l = south-light ]
+end
+
 to change-to-red
-  ask lights with [ color = yellow ] [
-    set color red
-    ask other lights [ set color green ]
-    set ticks-at-last-change ticks
+
+  let yellow-lights lights with [color = yellow]
+  show west-light
+  show lights
+  show yellow-lights
+  if any? yellow-lights with [ is-west-light self ] [
+    ask west-light [update-light red]
+    ask south-light [update-light green]
+    if double-lane?[
+      ask west-second-light [update-light red]
+      ask south-second-light [update-light green]
+    ]
+  ]
+  if any? yellow-lights with [ is-south-light self ] [
+    ask south-light [update-light red]
+    ask west-light [update-light green]
+    if double-lane?[
+      ask south-second-light [update-light red]
+      ask west-second-light [update-light green]
+    ]
   ]
 end
 
@@ -370,7 +453,7 @@ speed-limit
 speed-limit
 1
 10
-5.0
+10.0
 1
 1
 NIL
@@ -385,7 +468,7 @@ max-accel
 max-accel
 1
 10
-2.0
+10.0
 1
 1
 NIL
@@ -400,7 +483,7 @@ max-brake
 max-brake
 1
 10
-4.0
+1.0
 1
 1
 NIL
@@ -465,11 +548,11 @@ HORIZONTAL
 MONITOR
 575
 15
-685
+702
 60
-waiting overall
-count cars with [ speed = 0 ]
-0
+average wait time
+total-wait-time / ticks
+5
 1
 11
 
@@ -497,9 +580,9 @@ count cars with [ heading = 0 and speed = 0 ]
 
 PLOT
 575
-163
-813
-340
+230
+830
+407
 Waiting
 time
 waiting cars
@@ -553,7 +636,7 @@ MONITOR
 830
 160
 queue-size-northbound
-length south-queue
+length south-queue + length south-second-queue
 17
 1
 11
@@ -564,40 +647,21 @@ MONITOR
 830
 110
 queue-size-eastbound
-length west-queue
+length west-queue + length west-second-queue
 17
 1
 11
 
 SWITCH
-300
+380
 415
-435
+515
 448
 traffic-light?
 traffic-light?
 0
 1
 -1000
-
-PLOT
-575
-345
-815
-495
-Accidents
-time
-accidents
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -2674135 true "" "plot count accidents "
-"pen-1" 1.0 0 -16777216 true "" "plot total-accident"
 
 MONITOR
 690
@@ -607,6 +671,28 @@ MONITOR
 NIL
 passed-cars
 17
+1
+11
+
+SWITCH
+230
+415
+367
+448
+double-lane?
+double-lane?
+0
+1
+-1000
+
+MONITOR
+575
+170
+830
+215
+NIL
+total-accident / ticks
+3
 1
 11
 
