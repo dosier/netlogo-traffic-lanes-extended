@@ -137,10 +137,17 @@ end
 to-report filter-queue [queue]                              ;*
   set queue filter [c -> c != nobody] queue                 ;*
   ask turtles with [member? self queue][                    ;*
-    ifelse queue = west-queue or queue = east-queue[        ;*
-      if pxcor > -1 [ set queue remove self queue ]         ;*
-    ][
+    if queue = north-queue [
+      if pycor < 1 [ set queue remove self queue ]          ;*
+    ]
+    if queue = east-queue[                                  ;*
+      if pxcor > -1 [ set queue remove self queue ]          ;*
+    ]
+    if queue = south-queue [
       if pycor > -1 [ set queue remove self queue ]         ;*
+    ]
+    if queue = west-queue[                                  ;*
+      if pxcor < 1 [ set queue remove self queue ]         ;*
     ]
   ]
   report queue                                              ;*
