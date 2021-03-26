@@ -689,10 +689,10 @@ PLOT
 1115
 455
 Waiting
-time
+ticks
 waiting cars
 0.0
-100.0
+500.0
 0.0
 10.0
 true
