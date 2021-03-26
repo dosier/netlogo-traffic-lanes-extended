@@ -148,7 +148,7 @@ end
 
 ; update the active queue if the cum wait time of the passive queue
 ; exceeds the cum wait time of the active queue
-to update-active-queue ;*
+to update-active-queue                            ;*
 
   ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
   let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue] ;*
@@ -470,7 +470,7 @@ speed-limit
 speed-limit
 1
 10
-6.0
+5.0
 1
 1
 NIL
@@ -485,7 +485,7 @@ max-accel
 max-accel
 1
 10
-10.0
+3.0
 1
 1
 NIL
@@ -641,7 +641,7 @@ SWITCH
 473
 traffic-light?
 traffic-light?
-0
+1
 1
 -1000
 
