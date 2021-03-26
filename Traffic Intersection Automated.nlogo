@@ -89,6 +89,9 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;
 
 to go
+  if ticks >= 500 [        ;*
+    stop                   ;*
+  ]
   ask cars [ move ]
   check-for-collisions
   ifelse four-way? ;*
@@ -97,16 +100,16 @@ to go
     set east-queue filter-queue east-queue                                 ;*
     set south-queue filter-queue south-queue                               ;*
     set west-queue filter-queue west-queue                                 ;*
-    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0   ;*
+    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
     set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
-    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2  ;*
-    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3      ;*
+    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
+    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
   ]
   [
     set west-queue filter-queue west-queue                                 ;*
     set south-queue filter-queue south-queue                               ;*
     set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0    ;*
-    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1     ;*
+    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1      ;*
   ]
 
   update-active-queue                                            ;*
@@ -133,7 +136,7 @@ end
 to-report filter-queue [queue]                              ;*
   set queue filter [c -> c != nobody] queue                 ;*
   ask turtles with [member? self queue][                    ;*
-    ifelse queue = west-queue or queue = east-queue[ ;*
+    ifelse queue = west-queue or queue = east-queue[        ;*
       if pxcor > -1 [ set queue remove self queue ]         ;*
     ][
       if pycor > -1 [ set queue remove self queue ]         ;*
@@ -154,13 +157,13 @@ to update-active-queue ;*
 ;  show west-queue
 
   ifelse west-cum-wait > south-cum-wait           ;*
-  [
+  [                                               ;*
     set active-queue west-queue                   ;*
     set active-second-queue east-queue            ;*
     if not traffic-light? [                       ;*
       ask west-light [ set color green ]          ;*
       ask south-light [ set color red ]           ;*
-      if four-way? [                           ;*
+      if four-way? [                              ;*
         ask east-light [ set color green ]        ;*
         ask north-light [ set color red ]         ;*
       ]
@@ -172,7 +175,7 @@ to update-active-queue ;*
     if not traffic-light? [                        ;*
       ask south-light [ set color green ]          ;*
       ask west-light [ set color red ]             ;*
-      if four-way? [                            ;*
+      if four-way? [                               ;*
         ask east-light [ set color red ]           ;*
         ask north-light [ set color green ]        ;*
       ]
@@ -358,11 +361,11 @@ end
 GRAPHICS-WINDOW
 172
 10
-571
-410
+596
+435
 -1
 -1
-11.17143
+11.9
 1
 10
 1
@@ -435,9 +438,9 @@ NIL
 
 SLIDER
 5
-360
+405
 166
-393
+438
 green-length
 green-length
 1
@@ -480,9 +483,9 @@ HORIZONTAL
 
 SLIDER
 5
-198
+205
 166
-231
+238
 max-brake
 max-brake
 1
@@ -495,9 +498,9 @@ HORIZONTAL
 
 SLIDER
 5
-230
+245
 165
-263
+278
 freq-north
 freq-north
 0
@@ -510,9 +513,9 @@ HORIZONTAL
 
 SLIDER
 5
-263
+285
 165
-296
+318
 freq-east
 freq-east
 0
@@ -536,9 +539,9 @@ auto?
 
 SLIDER
 5
-395
+440
 166
-428
+473
 yellow-length
 yellow-length
 0
@@ -550,10 +553,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1090
-10
-1200
-55
+1120
+15
+1230
+60
 average wait time
 total-wait-time / ticks
 5
@@ -561,10 +564,10 @@ total-wait-time / ticks
 11
 
 MONITOR
-1090
-110
-1200
-155
+1120
+215
+1230
+260
 waiting-eastbound
 count cars with [ heading = 90 and speed = 0 ]
 0
@@ -572,10 +575,10 @@ count cars with [ heading = 90 and speed = 0 ]
 11
 
 MONITOR
-1090
-60
-1200
-105
+1120
+65
+1230
+110
 waiting-northbound
 count cars with [ heading = 0 and speed = 0 ]
 0
@@ -600,32 +603,32 @@ NIL
 0
 
 MONITOR
-1205
-60
-1345
-105
+1235
+65
+1375
+110
 queue-size-northbound
-length south-queue + length south-second-queue
+length south-queue
 17
 1
 11
 
 MONITOR
-1205
-111
-1345
-156
+1235
+216
+1375
+261
 queue-size-eastbound
-length west-queue + length west-second-queue
+length west-queue
 17
 1
 11
 
 SWITCH
-380
-415
-515
-448
+385
+440
+520
+473
 traffic-light?
 traffic-light?
 1
@@ -633,10 +636,10 @@ traffic-light?
 -1000
 
 MONITOR
-1205
-10
-1345
-55
+1235
+15
+1375
+60
 NIL
 passed-cars
 17
@@ -644,10 +647,10 @@ passed-cars
 11
 
 SWITCH
-230
-415
-367
-448
+220
+440
+357
+473
 four-way?
 four-way?
 0
@@ -655,10 +658,10 @@ four-way?
 -1000
 
 MONITOR
-1090
-255
-1345
-300
+1120
+265
+1375
+310
 NIL
 total-accident / ticks
 3
@@ -667,9 +670,9 @@ total-accident / ticks
 
 SLIDER
 5
-295
+325
 165
-328
+358
 freq-south
 freq-south
 0
@@ -681,10 +684,10 @@ freq-south
 HORIZONTAL
 
 PLOT
-575
-5
-1085
-450
+605
+10
+1115
+455
 Waiting
 time
 waiting cars
@@ -699,12 +702,14 @@ PENS
 "overall" 1.0 0 -16777216 true "" "plot count cars with [ speed = 0 ]"
 "eastbound" 1.0 0 -13345367 true "" "plot count cars with [ heading = 90 and speed = 0 ]"
 "northbound" 1.0 0 -2674135 true "" "plot count cars with [ heading = 0 and speed = 0 ]"
+"southbound" 1.0 0 -7500403 true "" "plot count cars with [ heading = 180 and speed = 0 ]"
+"westbound" 1.0 0 -955883 true "" "plot count cars with [ heading = -90 and speed = 0 ]"
 
 SLIDER
 5
-325
+365
 165
-358
+398
 freq-west
 freq-west
 0
@@ -714,6 +719,50 @@ freq-west
 1
 %
 HORIZONTAL
+
+MONITOR
+1120
+115
+1230
+160
+waiting-eastbound
+count cars with [ heading = -90 and speed = 0 ]
+17
+1
+11
+
+MONITOR
+1120
+165
+1230
+210
+waiting-southbound
+count cars with [ heading = 180 and speed = 0 ]
+17
+1
+11
+
+MONITOR
+1235
+165
+1375
+210
+queue-size-southbound
+length north-queue
+17
+1
+11
+
+MONITOR
+1235
+115
+1375
+160
+queue-size-westbound
+length east-queue
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
