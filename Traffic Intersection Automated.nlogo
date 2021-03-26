@@ -215,7 +215,7 @@ to move ; turtle procedure
     set patch-loc patch-loc + 0.1 ;*
     if any? accidents-here [
       ; if I hit an accident, I cause another one
-      ask accidents-here [ set clear-in 5 ]
+      ask accidents-here [ set clear-in 1 ]
       die
     ]
   ]
@@ -302,7 +302,7 @@ to check-for-collisions
     sprout-accidents 1 [
       set size 1.5
       set color yellow
-      set clear-in 5
+      set clear-in 1
     ]
     set total-accident total-accident + 1 ;*
     ask cars-here [ die ]
@@ -496,7 +496,7 @@ max-brake
 max-brake
 1
 10
-1.0
+10.0
 1
 1
 NIL
