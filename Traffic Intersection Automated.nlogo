@@ -29,7 +29,7 @@ accidents-own [
 
 breed [ cars car ]
 cars-own [
-  speed                 ; how many patches per tick the car moves
+  speed                 ; how fast the car moves per tick (speed 10 is 1 patch per tick)
   wait-ticks            ;* how many ticks the car has been in the queue for
   passed                ;* boolean representing whether car passed traffic lights
   queue-id              ;* id of the queue this car spawned in
@@ -79,8 +79,8 @@ to setup
     ]
     ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
     ask patch -1 0 [ sprout-lights 1 [ set color red ] ]
-    set west-light one-of lights at-points [[-1 0]]  ;*
-    set south-light one-of lights at-points [[0 -1]] ;*
+    set west-light one-of lights at-points [[-1 0]]         ;*
+    set south-light one-of lights at-points [[0 -1]]        ;*
   ]
   reset-ticks
 end
@@ -91,11 +91,11 @@ end
 
 to go
   if ticks >= 5000 [        ;*
-    stop                   ;*
+    stop                    ;*
   ]
   ask cars [ move ]
   check-for-collisions
-  ifelse four-way? ;*
+  ifelse four-way?          ;*
   [
     set north-queue filter-queue north-queue                               ;*
     set east-queue filter-queue east-queue                                 ;*
@@ -113,10 +113,10 @@ to go
     set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1      ;*
   ]
 
-  update-active-queue                                            ;*
-  set total-wait-time total-wait-time + sum [wait-ticks] of cars ;*
+  update-active-queue                                                      ;*
+  set total-wait-time total-wait-time + sum [wait-ticks] of cars           ;*
 
-  if traffic-light?[ ;*
+  if traffic-light?[                                                       ;*
     ; if we are in "auto" mode and a light has been
     ; green for long enough, we turn it yellow
     if auto? and elapsed? green-length [
@@ -190,9 +190,9 @@ to-report make-new-car [ freq x y h queue queue-identifier]
       setxy x y
       set heading h
       set color one-of base-colors
-      set queue lput self queue     ;* add car at end of queue
-      set queue-id queue-identifier ;* id of the queue
-      set total-cars total-cars + 1 ;*
+      set queue lput self queue        ;* add car at end of queue
+      set queue-id queue-identifier    ;* id of the queue
+      set total-cars total-cars + 1    ;*
       set patch-loc 0.0
       adjust-speed
     ]
@@ -202,17 +202,17 @@ end
 
 to move ; turtle procedure
   adjust-speed
-  update-wait-ticks ;*
+  update-wait-ticks                                 ;*
   repeat speed [ ; move ahead the correct amount
-    if patch-loc >= 1.0 [ ;*
+    if patch-loc >= 1.0 [                           ;*
       fd 1
       if not can-move? 1 [
         set passed-cars passed-cars + 1
         die ; die when I reach the end of the world
       ]
-      set patch-loc 0.0 ;*
+      set patch-loc 0.0                             ;*
     ]
-    set patch-loc patch-loc + 0.1 ;*
+    set patch-loc patch-loc + 0.1                   ;*
     if any? accidents-here [
       ; if I hit an accident, I cause another one
       ask accidents-here [ set clear-in 1 ]
@@ -221,22 +221,22 @@ to move ; turtle procedure
   ]
 end
 
-to update-wait-ticks              ;*
-  ifelse is-waiting [             ;*
-    set wait-ticks wait-ticks + 1 ;*
+to update-wait-ticks                    ;*
+  ifelse is-waiting [                   ;*
+    set wait-ticks wait-ticks + 1       ;*
   ][
-    set wait-ticks 0              ;*
+    set wait-ticks 0                    ;*
   ]
 end
 
 ; check if the car is in the non-active queue and its speed is 0
-to-report is-waiting ;*
+to-report is-waiting                                                       ;*
   report                                                                   ;*
     (member? self west-queue or member? self south-queue                   ;*
      or member? self east-queue or member? self north-queue)               ;*
     and not member? self active-queue                                      ;*
     and not member? self active-second-queue                               ;*
-    and speed = 0 ;*
+    and speed = 0                                                          ;*
 end
 
 to adjust-speed ; turtle procedure
@@ -251,9 +251,9 @@ to adjust-speed ; turtle procedure
   if blocked-patch != nobody [
     ; if there is an obstacle ahead, reduce my speed
     ; until I'm sure I won't hit it on the next tick
-    let space-ahead (distance blocked-patch - patch-loc) * 10
+    let space-ahead (distance blocked-patch - patch-loc) * 10    ;*
     while [
-      not is-safe-speed? target-speed space-ahead and
+      not is-safe-speed? target-speed space-ahead and            ;*
       target-speed > min-speed
     ] [
       set target-speed (target-speed - 1)
@@ -267,13 +267,13 @@ end
 to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter
   ; If I was to break as hard as I can starting the next tick,
   ; would I be able to stop in time?
-  let space-travelled 0
-  let current-speed speed-at-this-tick
-  while [current-speed > 0] [
-    set space-travelled (space-travelled + current-speed)
-    set current-speed (current-speed - max-brake)
+  let space-travelled 0                                       ;*
+  let current-speed speed-at-this-tick                        ;*
+  while [current-speed > 0] [                                 ;*
+    set space-travelled (space-travelled + current-speed)     ;*
+    set current-speed (current-speed - max-brake)             ;*
   ]
-  report space-travelled <= space-ahead
+  report space-travelled <= space-ahead                       ;*
 end
 
 to-report next-blocked-patch ; turtle procedure
@@ -308,7 +308,7 @@ to check-for-collisions
       set color yellow
       set clear-in 1
     ]
-    set total-accident total-accident + 1 ;*
+    set total-accident total-accident + 1     ;*
     ask cars-here [ die ]
   ]
 end
@@ -320,41 +320,41 @@ to change-to-yellow
   ]
 end
 
-to update-light [col]            ;*
-  set color col                  ;*
-  set ticks-at-last-change ticks ;*
+to update-light [col]                ;*
+  set color col                      ;*
+  set ticks-at-last-change ticks     ;*
 end
 
 to-report is-west-light [l]                                              ;*
-  ifelse four-way? [ report l = west-light or l = east-light ] ;*
+  ifelse four-way? [ report l = west-light or l = east-light ]           ;*
   [ report l = west-light ]                                              ;*
 end
 
 to-report is-south-light [l]                                               ;*
-  ifelse four-way? [ report l = south-light or l = north-light ] ;*
+  ifelse four-way? [ report l = south-light or l = north-light ]           ;*
   [ report l = south-light ]                                               ;*
 end
 
 to change-to-red
 
-  let yellow-lights lights with [color = yellow] ;*
+  let yellow-lights lights with [color = yellow]        ;*
   show west-light
   show lights
   show yellow-lights
   if any? yellow-lights with [ is-west-light self ] [   ;*
     ask west-light [update-light red]                   ;*
     ask south-light [update-light green]                ;*
-    if four-way? [                                    ;*
-      ask east-light [update-light red]          ;*
-      ask north-light [update-light green]       ;*
+    if four-way? [                                      ;*
+      ask east-light [update-light red]                 ;*
+      ask north-light [update-light green]              ;*
     ]
   ]
   if any? yellow-lights with [ is-south-light self ] [  ;*
     ask south-light [update-light red]                  ;*
     ask west-light [update-light green]                 ;*
-    if four-way? [                                    ;*
-      ask north-light [update-light red]         ;*
-      ask east-light [update-light green]        ;*
+    if four-way? [                                      ;*
+      ask north-light [update-light red]                ;*
+      ask east-light [update-light green]               ;*
     ]
   ]
 end
@@ -500,7 +500,7 @@ max-brake
 max-brake
 1
 10
-10.0
+2.0
 1
 1
 NIL
