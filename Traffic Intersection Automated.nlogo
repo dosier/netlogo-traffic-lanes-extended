@@ -33,6 +33,7 @@ cars-own [
   wait-ticks            ;* how many ticks the car has been in the queue for
   passed                ;* boolean representing whether car passed traffic lights
   queue-id              ;* id of the queue this car spawned in
+  patch-loc             ;* The fraction of the patch that has been passed
 ]
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -89,7 +90,7 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;
 
 to go
-  if ticks >= 500 [        ;*
+  if ticks >= 5000 [        ;*
     stop                   ;*
   ]
   ask cars [ move ]
@@ -192,6 +193,7 @@ to-report make-new-car [ freq x y h queue queue-identifier]
       set queue lput self queue     ;* add car at end of queue
       set queue-id queue-identifier ;* id of the queue
       set total-cars total-cars + 1 ;*
+      set patch-loc 0.0
       adjust-speed
     ]
   ]
@@ -202,11 +204,15 @@ to move ; turtle procedure
   adjust-speed
   update-wait-ticks ;*
   repeat speed [ ; move ahead the correct amount
-    fd 1
-    if not can-move? 1 [
-      set passed-cars passed-cars + 1
-      die ; die when I reach the end of the world
+    if patch-loc >= 1.0 [ ;*
+      fd 1
+      if not can-move? 1 [
+        set passed-cars passed-cars + 1
+        die ; die when I reach the end of the world
+      ]
+      set patch-loc 0.0 ;*
     ]
+    set patch-loc patch-loc + 0.1 ;*
     if any? accidents-here [
       ; if I hit an accident, I cause another one
       ask accidents-here [ set clear-in 5 ]
@@ -227,13 +233,13 @@ end
 to-report is-waiting ;*
   report                                                                   ;*
     (member? self west-queue or member? self south-queue                   ;*
-     or member? self east-queue or member? self north-queue) ;*
+     or member? self east-queue or member? self north-queue)               ;*
     and not member? self active-queue                                      ;*
     and not member? self active-second-queue                               ;*
     and speed = 0 ;*
 end
 
-to adjust-speed
+to adjust-speed ; turtle procedure
 
   ; calculate the minimum and maximum possible speed I could go
   let min-speed max (list (speed - max-brake) 0)
@@ -245,7 +251,7 @@ to adjust-speed
   if blocked-patch != nobody [
     ; if there is an obstacle ahead, reduce my speed
     ; until I'm sure I won't hit it on the next tick
-    let space-ahead (distance blocked-patch - 1)
+    let space-ahead (distance blocked-patch - patch-loc) * 10
     while [
       breaking-distance-at target-speed > space-ahead and
       target-speed > min-speed
@@ -261,7 +267,7 @@ end
 to-report breaking-distance-at [ speed-at-this-tick ] ; car reporter
   ; If I was to break as hard as I can on the next tick,
   ; how much distance would I have travelled assuming I'm
-  ; currently going at `speed-this-tick`?
+  ; currently going at `speed-at-this-tick`?
   let min-speed-at-next-tick max (list (speed-at-this-tick - max-brake) 0)
   report speed-at-this-tick + min-speed-at-next-tick
 end
@@ -443,10 +449,10 @@ SLIDER
 438
 green-length
 green-length
-1
-50
-13.0
-1
+10
+500
+130.0
+10
 1
 NIL
 HORIZONTAL
@@ -460,7 +466,7 @@ speed-limit
 speed-limit
 1
 10
-5.0
+10.0
 1
 1
 NIL
@@ -475,7 +481,7 @@ max-accel
 max-accel
 1
 10
-2.0
+10.0
 1
 1
 NIL
@@ -490,7 +496,7 @@ max-brake
 max-brake
 1
 10
-3.0
+1.0
 1
 1
 NIL
@@ -545,9 +551,9 @@ SLIDER
 yellow-length
 yellow-length
 0
+100
+30.0
 10
-3.0
-1
 1
 NIL
 HORIZONTAL
