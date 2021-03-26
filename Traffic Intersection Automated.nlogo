@@ -6,14 +6,14 @@ globals [
   ticks-at-last-change  ; value of the tick counter the last time a light changed
   active-queue          ;* the queue that is currently being processed
   active-second-queue   ;* the second active queue
-  west-queue            ;* the car queue for the west-east lane
-  south-queue           ;* the car queue for the south-north lane
-  west-second-queue     ;* the car queue for the west-east lane
-  south-second-queue    ;* the car queue for the south-north lane
-  west-light            ;*
-  west-second-light     ;*
+  north-queue           ;* the car queue for the north lane
+  east-queue            ;* the car queue for the east lane
+  south-queue           ;* the car queue for the south lane
+  west-queue            ;* the car queue for the west lane
+  north-light           ;*
+  east-light            ;*
   south-light           ;*
-  south-second-light    ;*
+  west-light            ;*
   total-accident        ;*
   passed-cars           ;*
   total-wait-time       ;*
@@ -44,29 +44,31 @@ to setup
   set-default-shape lights "square"
   set-default-shape accidents "fire"
   set-default-shape cars "car"
-  set west-queue []                          ;*
+  set north-queue []                         ;*
+  set east-queue []                          ;*
   set south-queue []                         ;*
-  set west-second-queue []                   ;*
-  set south-second-queue []                  ;*
-  set active-queue south-queue               ;*
-  set active-second-queue south-second-queue ;*
+  set west-queue []                          ;*
+  set active-queue north-queue               ;*
+  set active-second-queue south-queue        ;*
   set total-cars 0                           ;*
 
   ; initialise queues (lists) for lanes
-  ifelse double-lane? [
+  ifelse four-way? [
     ask patches [
       ifelse ((1 <= pxcor and pxcor <= 3) or (-3 <= pxcor and pxcor <= -1)) or ((1 <= pycor and pycor <= 3) or (-3 <= pycor and pycor <= -1))
       [ set pcolor black ]     ; the roads are black
       [ set pcolor green - 1 ] ; and the grass is green
     ]
-    ask patch -2 -3 [ sprout-lights 1 [ set color red ] ]   ;*
-    ask patch -3 -2 [ sprout-lights 1 [ set color green ] ] ;*
-    ask patch -3 2 [ sprout-lights 1 [ set color green ] ]  ;*
-    ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]    ;*
-    set west-light one-of lights at-points [[-2 -3]]        ;*
-    set west-second-light one-of lights at-points [[2 -3]]  ;*
-    set south-light one-of lights at-points [[-3 -2]]       ;*
-    set south-second-light one-of lights at-points [[-3 2]] ;*
+    ask patch -2 3 [ sprout-lights 1 [ set color red ] ]    ;* North
+    ask patch 3 2 [ sprout-lights 1 [ set color green ] ]   ;* East
+    ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]    ;* South
+    ask patch -3 -2 [ sprout-lights 1 [ set color green ] ] ;* West
+    set north-light one-of lights at-points [[-2 3]]        ;*
+    set east-light one-of lights at-points [[3 2]]          ;*
+    set south-light one-of lights at-points [[2 -3]]        ;*
+    set west-light one-of lights at-points [[-3 -2]]        ;*
+
+
   ]
   [
     ask patches [
@@ -89,22 +91,22 @@ end
 to go
   ask cars [ move ]
   check-for-collisions
-  ifelse double-lane? ;*
+  ifelse four-way? ;*
   [
-    set west-queue filter-queue west-queue                                            ;*
-    set south-queue filter-queue south-queue                                          ;*
-    set west-second-queue filter-queue west-second-queue                              ;*
-    set south-second-queue filter-queue south-second-queue                            ;*
-    set south-queue make-new-car freq-north -2 min-pycor 0 south-queue 0              ;*
-    set west-queue make-new-car freq-east min-pxcor -2 90 west-queue 1                ;*
-    set south-second-queue make-new-car freq-north 2 min-pycor 0 south-second-queue 2 ;*
-    set west-second-queue make-new-car freq-east min-pxcor 2 90 west-second-queue 3   ;*
+    set north-queue filter-queue north-queue                               ;*
+    set east-queue filter-queue east-queue                                 ;*
+    set south-queue filter-queue south-queue                               ;*
+    set west-queue filter-queue west-queue                                 ;*
+    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0   ;*
+    set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
+    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2  ;*
+    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3      ;*
   ]
   [
-    set west-queue filter-queue west-queue   ;*
-    set south-queue filter-queue south-queue ;*
-    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0 ;*
-    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1   ;*
+    set west-queue filter-queue west-queue                                 ;*
+    set south-queue filter-queue south-queue                               ;*
+    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0    ;*
+    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1     ;*
   ]
 
   update-active-queue                                            ;*
@@ -131,7 +133,7 @@ end
 to-report filter-queue [queue]                              ;*
   set queue filter [c -> c != nobody] queue                 ;*
   ask turtles with [member? self queue][                    ;*
-    ifelse queue = west-queue or queue = west-second-queue[ ;*
+    ifelse queue = west-queue or queue = east-queue[ ;*
       if pxcor > -1 [ set queue remove self queue ]         ;*
     ][
       if pycor > -1 [ set queue remove self queue ]         ;*
@@ -145,8 +147,8 @@ end
 to update-active-queue ;*
 
   ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
-  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self south-second-queue] ;*
-  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self west-second-queue]   ;*
+  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue] ;*
+  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self east-queue]   ;*
 
 ;  show south-queue
 ;  show west-queue
@@ -154,25 +156,25 @@ to update-active-queue ;*
   ifelse west-cum-wait > south-cum-wait           ;*
   [
     set active-queue west-queue                   ;*
-    set active-second-queue west-second-queue     ;*
+    set active-second-queue east-queue            ;*
     if not traffic-light? [                       ;*
       ask west-light [ set color green ]          ;*
       ask south-light [ set color red ]           ;*
-      if double-lane? [                           ;*
-        ask west-second-light [ set color green ] ;*
-        ask south-second-light [ set color red ]  ;*
+      if four-way? [                           ;*
+        ask east-light [ set color green ]        ;*
+        ask north-light [ set color red ]         ;*
       ]
     ]
   ]
   [
     set active-queue south-queue                   ;*
-    set active-second-queue south-second-queue     ;*
+    set active-second-queue north-queue            ;*
     if not traffic-light? [                        ;*
       ask south-light [ set color green ]          ;*
       ask west-light [ set color red ]             ;*
-      if double-lane? [                            ;*
-        ask west-second-light [ set color red ]    ;*
-        ask south-second-light [ set color green ] ;*
+      if four-way? [                            ;*
+        ask east-light [ set color red ]           ;*
+        ask north-light [ set color green ]        ;*
       ]
     ]
   ]
@@ -222,7 +224,7 @@ end
 to-report is-waiting ;*
   report                                                                   ;*
     (member? self west-queue or member? self south-queue                   ;*
-     or member? self west-second-queue or member? self south-second-queue) ;*
+     or member? self east-queue or member? self north-queue) ;*
     and not member? self active-queue                                      ;*
     and not member? self active-second-queue                               ;*
     and speed = 0 ;*
@@ -311,12 +313,12 @@ to update-light [col]            ;*
 end
 
 to-report is-west-light [l]                                              ;*
-  ifelse double-lane? [ report l = west-light or l = west-second-light ] ;*
+  ifelse four-way? [ report l = west-light or l = east-light ] ;*
   [ report l = west-light ]                                              ;*
 end
 
 to-report is-south-light [l]                                               ;*
-  ifelse double-lane? [ report l = south-light or l = south-second-light ] ;*
+  ifelse four-way? [ report l = south-light or l = north-light ] ;*
   [ report l = south-light ]                                               ;*
 end
 
@@ -329,17 +331,17 @@ to change-to-red
   if any? yellow-lights with [ is-west-light self ] [   ;*
     ask west-light [update-light red]                   ;*
     ask south-light [update-light green]                ;*
-    if double-lane?[                                    ;*
-      ask west-second-light [update-light red]          ;*
-      ask south-second-light [update-light green]       ;*
+    if four-way? [                                    ;*
+      ask east-light [update-light red]          ;*
+      ask north-light [update-light green]       ;*
     ]
   ]
   if any? yellow-lights with [ is-south-light self ] [  ;*
     ask south-light [update-light red]                  ;*
     ask west-light [update-light green]                 ;*
-    if double-lane?[                                    ;*
-      ask south-second-light [update-light red]         ;*
-      ask west-second-light [update-light green]        ;*
+    if four-way? [                                    ;*
+      ask north-light [update-light red]         ;*
+      ask east-light [update-light green]        ;*
     ]
   ]
 end
@@ -433,9 +435,9 @@ NIL
 
 SLIDER
 5
-315
+360
 166
-348
+393
 green-length
 green-length
 1
@@ -493,9 +495,9 @@ HORIZONTAL
 
 SLIDER
 5
-240
+230
 165
-273
+263
 freq-north
 freq-north
 0
@@ -508,9 +510,9 @@ HORIZONTAL
 
 SLIDER
 5
-273
+263
 165
-306
+296
 freq-east
 freq-east
 0
@@ -534,9 +536,9 @@ auto?
 
 SLIDER
 5
-350
+395
 166
-383
+428
 yellow-length
 yellow-length
 0
@@ -548,10 +550,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-575
-15
-702
-60
+1090
+10
+1200
+55
 average wait time
 total-wait-time / ticks
 5
@@ -559,10 +561,10 @@ total-wait-time / ticks
 11
 
 MONITOR
-575
-64
-685
-109
+1090
+110
+1200
+155
 waiting-eastbound
 count cars with [ heading = 90 and speed = 0 ]
 0
@@ -570,35 +572,15 @@ count cars with [ heading = 90 and speed = 0 ]
 11
 
 MONITOR
-575
-115
-685
-160
+1090
+60
+1200
+105
 waiting-northbound
 count cars with [ heading = 0 and speed = 0 ]
 0
 1
 11
-
-PLOT
-575
-230
-830
-407
-Waiting
-time
-waiting cars
-0.0
-100.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"overall" 1.0 0 -16777216 true "" "plot count cars with [ speed = 0 ]"
-"eastbound" 1.0 0 -13345367 true "" "plot count cars with [ heading = 90 and speed = 0 ]"
-"northbound" 1.0 0 -2674135 true "" "plot count cars with [ heading = 0 and speed = 0 ]"
 
 BUTTON
 105
@@ -618,10 +600,10 @@ NIL
 0
 
 MONITOR
-690
-115
-830
-160
+1205
+60
+1345
+105
 queue-size-northbound
 length south-queue + length south-second-queue
 17
@@ -629,10 +611,10 @@ length south-queue + length south-second-queue
 11
 
 MONITOR
-690
-65
-830
-110
+1205
+111
+1345
+156
 queue-size-eastbound
 length west-queue + length west-second-queue
 17
@@ -651,10 +633,10 @@ traffic-light?
 -1000
 
 MONITOR
-690
-15
-830
-60
+1205
+10
+1345
+55
 NIL
 passed-cars
 17
@@ -666,22 +648,72 @@ SWITCH
 415
 367
 448
-double-lane?
-double-lane?
+four-way?
+four-way?
 0
 1
 -1000
 
 MONITOR
-575
-170
-830
-215
+1090
+255
+1345
+300
 NIL
 total-accident / ticks
 3
 1
 11
+
+SLIDER
+5
+295
+165
+328
+freq-south
+freq-south
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
+
+PLOT
+575
+5
+1085
+450
+Waiting
+time
+waiting cars
+0.0
+100.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"overall" 1.0 0 -16777216 true "" "plot count cars with [ speed = 0 ]"
+"eastbound" 1.0 0 -13345367 true "" "plot count cars with [ heading = 90 and speed = 0 ]"
+"northbound" 1.0 0 -2674135 true "" "plot count cars with [ heading = 0 and speed = 0 ]"
+
+SLIDER
+5
+325
+165
+358
+freq-west
+freq-west
+0
+100
+100.0
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
