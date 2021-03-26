@@ -470,7 +470,7 @@ speed-limit
 speed-limit
 1
 10
-10.0
+6.0
 1
 1
 NIL
@@ -641,7 +641,7 @@ SWITCH
 473
 traffic-light?
 traffic-light?
-1
+0
 1
 -1000
 
@@ -733,10 +733,10 @@ HORIZONTAL
 MONITOR
 1120
 115
-1230
+1237
 160
-waiting-eastbound
-count cars with [ heading = -90 and speed = 0 ]
+waiting-westbound
+count cars with [ heading = 270 and speed = 0 ]
 17
 1
 11
