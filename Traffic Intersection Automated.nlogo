@@ -267,13 +267,15 @@ end
 to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter
   ; If I was to break as hard as I can starting the next tick,
   ; would I be able to stop in time?
-  let space-travelled 0                                       ;*
-  let current-speed speed-at-this-tick                        ;*
-  while [current-speed > 0] [                                 ;*
-    set space-travelled (space-travelled + current-speed)     ;*
-    set current-speed (current-speed - max-brake)             ;*
-  ]
-  report space-travelled <= space-ahead                       ;*
+  ;let space-travelled 0                                       ;*
+  ;let current-speed speed-at-this-tick                        ;*
+  ;while [current-speed > 0] [                                 ;*
+  ;  set space-travelled (space-travelled + current-speed)     ;*
+  ;  set current-speed (current-speed - max-brake)             ;*
+  ;]
+  let n speed-at-this-tick
+  report ((n * (n + 1)) / 2) <= space-ahead
+  ;report space-travelled <= space-ahead                       ;*
 end
 
 to-report next-blocked-patch ; turtle procedure
@@ -485,7 +487,7 @@ max-accel
 max-accel
 1
 10
-3.0
+5.0
 1
 1
 NIL
@@ -500,7 +502,7 @@ max-brake
 max-brake
 1
 10
-2.0
+1.0
 1
 1
 NIL
@@ -515,8 +517,8 @@ freq-north
 freq-north
 0
 100
-100.0
-5
+30.0
+1
 1
 %
 HORIZONTAL
@@ -530,8 +532,8 @@ freq-east
 freq-east
 0
 100
-100.0
-5
+30.0
+1
 1
 %
 HORIZONTAL
@@ -672,8 +674,8 @@ MONITOR
 265
 1375
 310
-NIL
-total-accident / ticks
+Passed car %
+total-accident / (passed-cars + total-accident) * 100
 3
 1
 11
@@ -687,7 +689,7 @@ freq-south
 freq-south
 0
 100
-100.0
+30.0
 1
 1
 %
@@ -724,7 +726,7 @@ freq-west
 freq-west
 0
 100
-100.0
+30.0
 1
 1
 %
