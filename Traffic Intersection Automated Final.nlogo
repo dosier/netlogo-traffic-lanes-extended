@@ -452,7 +452,7 @@ green-length
 green-length
 1
 50
-13.0
+12.0
 1
 1
 NIL
@@ -497,7 +497,7 @@ max-brake
 max-brake
 1
 10
-3.0
+4.0
 1
 1
 NIL
@@ -512,7 +512,7 @@ freq-north
 freq-north
 0
 100
-100.0
+40.0
 5
 1
 %
@@ -527,7 +527,7 @@ freq-east
 freq-east
 0
 100
-100.0
+40.0
 5
 1
 %
@@ -647,7 +647,7 @@ MONITOR
 15
 1375
 60
-NIL
+total cars passed
 passed-cars
 17
 1
@@ -684,7 +684,7 @@ freq-south
 freq-south
 0
 100
-100.0
+40.0
 1
 1
 %
@@ -721,7 +721,7 @@ freq-west
 freq-west
 0
 100
-100.0
+40.0
 1
 1
 %
