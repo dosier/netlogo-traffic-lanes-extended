@@ -32,6 +32,7 @@ cars-own [
   speed                 ;  how fast the car moves per tick (speed 10 is 1 patch per tick)
   wait-ticks            ;* how many ticks the car has been in the queue for
   passed                ;* boolean representing whether car passed traffic lights
+  queue-id              ;* id of the queue this car spawned in
   patch-loc             ;* The fraction of the patch that has been passed
 ]
 
@@ -99,20 +100,19 @@ to go
     set east-queue filter-queue east-queue                                 ;*
     set south-queue filter-queue south-queue                               ;*
     set west-queue filter-queue west-queue                                 ;*
-    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue   ;*
-    set east-queue make-new-car freq-west min-pxcor -2 90 east-queue       ;*
-    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue      ;*
-    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue       ;*
+    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
+    set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
+    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
+    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
   ]
   [
     set west-queue filter-queue west-queue                                 ;*
     set south-queue filter-queue south-queue                               ;*
-    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue      ;*
-    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue        ;*
+    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0    ;*
+    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1      ;*
   ]
 
   update-active-queue                                                      ;*
-  set total-wait-time total-wait-time + sum [wait-ticks] of cars           ;*
 
   if traffic-light?[                                                       ;*
     ; if we are in "auto" mode and a light has been
@@ -134,13 +134,13 @@ end
 to-report filter-queue [queue]                              ;*
   set queue filter [c -> c != nobody] queue                 ;*
   ask turtles with [member? self queue][                    ;*
-    if queue = north-queue [
+    if queue = north-queue [                                ;*
       if pycor < 1 [ set queue remove self queue ]          ;*
     ]
     if queue = east-queue[                                  ;*
-      if pxcor > -1 [ set queue remove self queue ]          ;*
+      if pxcor > -1 [ set queue remove self queue ]         ;*
     ]
-    if queue = south-queue [
+    if queue = south-queue [                                ;*
       if pycor > -1 [ set queue remove self queue ]         ;*
     ]
     if queue = west-queue[                                  ;*
@@ -154,8 +154,8 @@ end
 ; exceeds the cum wait time of the active lanes
 to update-active-queue                            ;*
   ; cumulative wait times for cars in the vertical and horizontal lanes.
-  let ver-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue]  ;*
-  let hor-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self east-queue]   ;*
+  let ver-cum-wait sum [wait-ticks] of turtles with [(member? self south-queue or member? self north-queue) and not passed]  ;*
+  let hor-cum-wait sum [wait-ticks] of turtles with [(member? self west-queue or member? self east-queue) and not passed]    ;*
 
   ifelse hor-cum-wait > ver-cum-wait              ;*
   [
@@ -184,15 +184,17 @@ to update-active-queue                            ;*
   ]
 end
 
-to-report make-new-car [ freq x y h queue ]
+to-report make-new-car [ freq x y h queue queue-identifier]
   if (random-float 100 < freq) and not any? turtles-on patch x y [
     create-cars 1 [
       setxy x y
       set heading h
       set color one-of base-colors
+      set passed false                 ;*
       set queue lput self queue        ;* add car at end of queue
+      set queue-id queue-identifier    ;* id of the queue
       set total-cars total-cars + 1    ;*
-      set patch-loc 0.0
+      set patch-loc 0.0                ;*
       adjust-speed
     ]
   ]
@@ -204,9 +206,13 @@ to move ; turtle procedure
   update-wait-ticks                                 ;*
   repeat speed [                                    ; move ahead the correct amount
     if patch-loc >= 1.0 [                           ;*
+      if any? (lights-on patch-here) [              ;*
+        set passed true                             ;*
+      ]
       fd 1
       if not can-move? 1 [
         set passed-cars passed-cars + 1
+        set total-wait-time total-wait-time + wait-ticks ;*
         die                                         ; die when I reach the end of the world
       ]
       set patch-loc 0.0                             ;*
@@ -220,20 +226,15 @@ to move ; turtle procedure
 end
 
 to update-wait-ticks                    ;*
-  ifelse is-waiting [                   ;*
+  if is-waiting [                       ;*
     set wait-ticks wait-ticks + 1       ;*
-  ][
-    set wait-ticks 0                    ;*
   ]
 end
 
-; check if the car is in the non-active queue and its speed is 0
+; check if the car is before the intersection and its speed is 0
 to-report is-waiting                                                       ;*
   report                                                                   ;*
-    (member? self west-queue or member? self south-queue                   ;*
-     or member? self east-queue or member? self north-queue)               ;*
-    and not member? self active-queue                                      ;*
-    and not member? self active-second-queue                               ;*
+    not passed                                                             ;*
     and speed = 0                                                          ;*
 end
 
@@ -249,7 +250,7 @@ to adjust-speed ; turtle procedure
   if blocked-patch != nobody [
     ; if there is an obstacle ahead, reduce my speed
     ; until I'm sure I won't hit it on the next tick
-    let space-ahead (distance blocked-patch - patch-loc) * 10    ;*
+    let space-ahead (distance blocked-patch - patch-loc) * 10    ;* Scaling the distance to match the speed scale
     while [
       not is-safe-speed? target-speed space-ahead and            ;*
       target-speed > min-speed
@@ -262,18 +263,16 @@ to adjust-speed ; turtle procedure
 
 end
 
-to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter
+to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter, takes arguments of the same scale
   ; If I was to break as hard as I can starting the next tick,
   ; would I be able to stop in time?
-  ;let space-travelled 0                                       ;*
-  ;let current-speed speed-at-this-tick                        ;*
-  ;while [current-speed > 0] [                                 ;*
-  ;  set space-travelled (space-travelled + current-speed)     ;*
-  ;  set current-speed (current-speed - max-brake)             ;*
-  ;]
-  let n speed-at-this-tick
-  report ((n * (n + 1)) / 2) <= space-ahead
-  ;report space-travelled <= space-ahead                       ;*
+  let space-travelled 0                                       ;*
+  let current-speed speed-at-this-tick                        ;*
+  while [current-speed > 0] [                                 ;*
+    set space-travelled (space-travelled + current-speed)     ;*
+    set current-speed (current-speed - max-brake)             ;* The scale of input parameters must match max-brake
+  ]
+  report space-travelled <= space-ahead                       ;*
 end
 
 to-report next-blocked-patch ; turtle procedure
@@ -470,7 +469,7 @@ speed-limit
 speed-limit
 1
 10
-5.0
+3.0
 1
 1
 NIL
@@ -485,7 +484,7 @@ max-accel
 max-accel
 1
 10
-5.0
+2.0
 1
 1
 NIL
@@ -500,7 +499,7 @@ max-brake
 max-brake
 1
 10
-1.0
+3.0
 1
 1
 NIL
@@ -515,7 +514,7 @@ freq-north
 freq-north
 0
 100
-30.0
+10.0
 1
 1
 %
@@ -530,7 +529,7 @@ freq-east
 freq-east
 0
 100
-30.0
+10.0
 1
 1
 %
@@ -568,7 +567,7 @@ MONITOR
 1230
 60
 average wait time
-total-wait-time / ticks
+total-wait-time / passed-cars
 5
 1
 11
@@ -687,7 +686,7 @@ freq-south
 freq-south
 0
 100
-30.0
+10.0
 1
 1
 %
@@ -724,7 +723,7 @@ freq-west
 freq-west
 0
 100
-30.0
+10.0
 1
 1
 %
