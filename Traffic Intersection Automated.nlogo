@@ -57,32 +57,20 @@ to setup
   set mean-wait-time 0                                     ;*
 
   ; initialise queues (lists) for lanes
-  ifelse four-way? [
-    ask patches [
-      ifelse ((1 <= pxcor and pxcor <= 3) or (-3 <= pxcor and pxcor <= -1)) or ((1 <= pycor and pycor <= 3) or (-3 <= pycor and pycor <= -1))
-      [ set pcolor black ]                                  ; the roads are black
-      [ set pcolor green - 1 ]                              ; the grass is green
-    ]
-    ask patch -2 3 [ sprout-lights 1 [ set color red ] ]    ;* north
-    ask patch 3 2 [ sprout-lights 1 [ set color green ] ]   ;* east
-    ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]    ;* south
-    ask patch -3 -2 [ sprout-lights 1 [ set color green ] ] ;* west
-    set north-light one-of lights at-points [[-2 3]]        ;*
-    set east-light one-of lights at-points [[3 2]]          ;*
-    set south-light one-of lights at-points [[2 -3]]        ;*
-    set west-light one-of lights at-points [[-3 -2]]        ;*
+
+  ask patches [
+    ifelse ((1 <= pxcor and pxcor <= 3) or (-3 <= pxcor and pxcor <= -1)) or ((1 <= pycor and pycor <= 3) or (-3 <= pycor and pycor <= -1))
+    [ set pcolor black ]                                  ; the roads are black
+    [ set pcolor green - 1 ]                              ; the grass is green
   ]
-  [
-    ask patches [
-      ifelse abs pxcor <= 1 or abs pycor <= 1
-      [ set pcolor black ]                                  ; the roads are black
-      [ set pcolor green - 1 ]                              ; the grass is green
-    ]
-    ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
-    ask patch -1 0 [ sprout-lights 1 [ set color red ] ]
-    set west-light one-of lights at-points [[-1 0]]         ;*
-    set south-light one-of lights at-points [[0 -1]]        ;*
-  ]
+  ask patch -2 3 [ sprout-lights 1 [ set color red ] ]    ;* north
+  ask patch 3 2 [ sprout-lights 1 [ set color green ] ]   ;* east
+  ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]    ;* south
+  ask patch -3 -2 [ sprout-lights 1 [ set color green ] ] ;* west
+  set north-light one-of lights at-points [[-2 3]]        ;*
+  set east-light one-of lights at-points [[3 2]]          ;*
+  set south-light one-of lights at-points [[2 -3]]        ;*
+  set west-light one-of lights at-points [[-3 -2]]        ;*
   reset-ticks
 end
 
@@ -96,23 +84,14 @@ to go
   ]
   ask cars [ move ]
   check-for-collisions
-  ifelse four-way?                                                         ;*
-  [
-    set north-queue filter-queue north-queue                               ;*
-    set east-queue filter-queue east-queue                                 ;*
-    set south-queue filter-queue south-queue                               ;*
-    set west-queue filter-queue west-queue                                 ;*
-    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
-    set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
-    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
-    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
-  ]
-  [
-    set west-queue filter-queue west-queue                                 ;*
-    set south-queue filter-queue south-queue                               ;*
-    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0    ;*
-    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1      ;*
-  ]
+  set north-queue filter-queue north-queue                               ;*
+  set east-queue filter-queue east-queue                                 ;*
+  set south-queue filter-queue south-queue                               ;*
+  set west-queue filter-queue west-queue                                 ;*
+  set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
+  set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
+  set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
+  set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
 
   update-active-queue                                                      ;*
 
@@ -166,10 +145,8 @@ to update-active-queue                            ;*
     if not traffic-light? [                       ;*
       ask west-light [ set color green ]          ;*
       ask south-light [ set color red ]           ;*
-      if four-way? [                              ;*
-        ask east-light [ set color green ]        ;*
-        ask north-light [ set color red ]         ;*
-      ]
+      ask east-light [ set color green ]        ;*
+      ask north-light [ set color red ]         ;*
     ]
   ]
   [
@@ -178,10 +155,8 @@ to update-active-queue                            ;*
     if not traffic-light? [                        ;*
       ask south-light [ set color green ]          ;*
       ask west-light [ set color red ]             ;*
-      if four-way? [                               ;*
-        ask east-light [ set color red ]           ;*
-        ask north-light [ set color green ]        ;*
-      ]
+      ask east-light [ set color red ]           ;*
+      ask north-light [ set color green ]        ;*
     ]
   ]
 end
@@ -332,13 +307,11 @@ to update-light [col]                ;*
 end
 
 to-report is-west-light [l]                                      ;*
-  ifelse four-way? [ report l = west-light or l = east-light ]   ;*
-  [ report l = west-light ]                                      ;*
+  report l = west-light or l = east-light   ;*
 end
 
 to-report is-south-light [l]                                     ;*
-  ifelse four-way? [ report l = south-light or l = north-light ] ;*
-  [ report l = south-light ]                                     ;*
+  report l = south-light or l = north-light  ;*
 end
 
 to change-to-red
@@ -350,18 +323,14 @@ to change-to-red
   if any? yellow-lights with [ is-west-light self ] [   ;*
     ask west-light [update-light red]                   ;*
     ask south-light [update-light green]                ;*
-    if four-way? [                                      ;*
-      ask east-light [update-light red]                 ;*
-      ask north-light [update-light green]              ;*
-    ]
+    ask east-light [update-light red]                 ;*
+    ask north-light [update-light green]              ;*
   ]
   if any? yellow-lights with [ is-south-light self ] [  ;*
     ask south-light [update-light red]                  ;*
     ask west-light [update-light green]                 ;*
-    if four-way? [                                      ;*
-      ask north-light [update-light red]                ;*
-      ask east-light [update-light green]               ;*
-    ]
+    ask north-light [update-light red]                ;*
+    ask east-light [update-light green]               ;*
   ]
 end
 
@@ -395,8 +364,8 @@ GRAPHICS-WINDOW
 17
 -17
 17
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -461,7 +430,7 @@ green-length
 green-length
 10
 500
-130.0
+70.0
 10
 1
 NIL
@@ -476,7 +445,7 @@ speed-limit
 speed-limit
 1
 10
-5.0
+3.0
 1
 1
 NIL
@@ -491,7 +460,7 @@ max-accel
 max-accel
 1
 10
-10.0
+2.0
 1
 1
 NIL
@@ -506,7 +475,7 @@ max-brake
 max-brake
 1
 10
-5.0
+3.0
 1
 1
 NIL
@@ -521,7 +490,7 @@ freq-north
 freq-north
 0
 100
-100.0
+10.0
 1
 1
 %
@@ -536,7 +505,7 @@ freq-east
 freq-east
 0
 100
-33.0
+10.0
 1
 1
 %
@@ -562,7 +531,7 @@ yellow-length
 yellow-length
 0
 100
-30.0
+10.0
 10
 1
 NIL
@@ -662,17 +631,6 @@ passed-cars
 1
 11
 
-SWITCH
-220
-440
-357
-473
-four-way?
-four-way?
-0
-1
--1000
-
 MONITOR
 1120
 265
@@ -693,7 +651,7 @@ freq-south
 freq-south
 0
 100
-100.0
+10.0
 1
 1
 %
@@ -730,7 +688,7 @@ freq-west
 freq-west
 0
 100
-21.0
+10.0
 1
 1
 %
