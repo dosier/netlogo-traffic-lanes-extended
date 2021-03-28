@@ -16,8 +16,10 @@ globals [
   west-light            ;* the west to east traffic light
   total-accident        ;* the total number of crashes
   passed-cars           ;* the total number of cars that reached there destination (other side of screen)
-  total-wait-time       ;* the total amount of ticks cars have waited for
   total-cars            ;* the total amount of cars spawned
+  mean-wait-time        ;* the total amount of ticks cars have waited for
+  M2                    ;* used to calculate variance between wait times
+  variance-wait-time    ;* the variance between cars' wait times
 ]
 
 breed [ lights light ]
@@ -52,7 +54,7 @@ to setup
   set active-queue north-queue                              ;*
   set active-second-queue south-queue                       ;*
   set total-cars 0                                          ;*
-  set total-wait-time 0                                     ;*
+  set mean-wait-time 0                                     ;*
 
   ; initialise queues (lists) for lanes
   ifelse four-way? [
@@ -212,7 +214,12 @@ to move ; turtle procedure
       fd 1
       if not can-move? 1 [
         set passed-cars passed-cars + 1
-        set total-wait-time total-wait-time + wait-ticks ;*
+        ; Welford's online algorithm from Wikipedia to calculate variance
+        let delta wait-ticks - mean-wait-time                     ;*
+        set mean-wait-time mean-wait-time + (delta / passed-cars) ;*
+        let delta2 wait-ticks - mean-wait-time                    ;*
+        set M2 (M2 + delta * delta2)                              ;*
+        set variance-wait-time M2 / passed-cars                   ;*
         die                                         ; die when I reach the end of the world
       ]
       set patch-loc 0.0                             ;*
@@ -469,7 +476,7 @@ speed-limit
 speed-limit
 1
 10
-3.0
+5.0
 1
 1
 NIL
@@ -499,7 +506,7 @@ max-brake
 max-brake
 1
 10
-3.0
+5.0
 1
 1
 NIL
@@ -529,7 +536,7 @@ freq-east
 freq-east
 0
 100
-10.0
+33.0
 1
 1
 %
@@ -567,7 +574,7 @@ MONITOR
 1230
 60
 average wait time
-total-wait-time / passed-cars
+mean-wait-time
 5
 1
 11
@@ -723,7 +730,7 @@ freq-west
 freq-west
 0
 100
-10.0
+21.0
 1
 1
 %
@@ -769,6 +776,17 @@ MONITOR
 160
 queue-size-westbound
 length east-queue
+17
+1
+11
+
+MONITOR
+1195
+350
+1307
+395
+NIL
+variance-wait-time
 17
 1
 11
