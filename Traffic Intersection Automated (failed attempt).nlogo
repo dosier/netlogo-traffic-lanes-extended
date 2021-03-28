@@ -97,20 +97,24 @@ to go
   check-for-collisions
   ifelse four-way?          ;*
   [
-    set north-queue filter-queue north-queue                               ;*
-    set east-queue filter-queue east-queue                                 ;*
-    set south-queue filter-queue south-queue                               ;*
-    set west-queue filter-queue west-queue                                 ;*
-    set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
-    set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
-    set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
-    set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
+    set north-queue filter-queue north-queue                                 ;*
+    set east-queue filter-queue east-queue                                   ;*
+    set south-queue filter-queue south-queue                                 ;*
+    set west-queue filter-queue west-queue                                   ;*
+    if ticks mod 3 = 0 [                                                     ;*
+      set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
+      set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
+      set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
+      set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
+    ]
   ]
   [
-    set west-queue filter-queue west-queue                                 ;*
-    set south-queue filter-queue south-queue                               ;*
-    set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0    ;*
-    set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1      ;*
+    set west-queue filter-queue west-queue                                   ;*
+    set south-queue filter-queue south-queue                                 ;*
+    if ticks mod 3 = 0 [                                                     ;*
+      set south-queue make-new-car freq-north 0 min-pycor 0 south-queue 0    ;*
+      set west-queue make-new-car freq-east min-pxcor 0 90 west-queue 1      ;*
+    ]
   ]
 
   update-active-queue                                                      ;*
@@ -271,8 +275,8 @@ to adjust-speed ; turtle procedure
 
 end
 
-to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter
-  ; If I was to break as hard as I can starting the next tick,
+to-report is-safe-speed? [ speed-at-this-tick space-ahead ] ; car reporter
+  ; If I was to break as hard as I could starting the next tick,
   ; would I be able to stop in time?
   let space-travelled 0                                       ;*
   let current-speed speed-at-this-tick                        ;*
@@ -280,7 +284,18 @@ to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter
     set space-travelled (space-travelled + current-speed)     ;*
     set current-speed (current-speed - max-brake)             ;*
   ]
-  report space-travelled <= space-ahead                       ;*
+  if veh-to-veh? [
+    let conflicted one-of other next-conflict-car speed-at-this-tick
+    if conflicted != nobody [
+      if [speed] of conflicted < speed [
+        report false
+        if [speed] of conflicted = speed and [wait-ticks] of conflicted >= wait-ticks [
+          report false
+        ]
+      ]
+    ]
+  ]
+  report space-travelled <= space-ahead
 end
 
 to-report next-blocked-patch ; turtle procedure
@@ -298,10 +313,36 @@ to-report is-blocked? [ target-patch ] ; turtle reporter
   report
     any? other cars-on target-patch or
     any? accidents-on target-patch or
-    any? (lights-on target-patch) with [ color = red ] or
-    (any? (lights-on target-patch) with [ color = yellow ] and
+    (any? (lights-on target-patch) with [ color = red ] and not veh-to-veh?) or
+    ((any? (lights-on target-patch) with [ color = yellow ] and not veh-to-veh?) and
       ; only stop for a yellow light if I'm not already on it:
       target-patch != patch-here)
+end
+
+to-report next-conflict-car [ current-speed ]           ;* report the first car with an upcoming conflict if present (crash if unresolved)
+  ; check all patches ahead until I find a conflicting
+  ; patch or I reach the end of the world
+  let patch-to-check patch-here
+  let ticks-to-patch 0
+  let p-loc patch-loc * 10
+  while [ patch-to-check != nobody ] [
+    let car-con (cars with [will-be-at? patch-to-check ticks-to-patch])
+    if car-con != nobody [report car-con]
+    set patch-to-check patch-ahead ((distance patch-to-check) + 1)
+    while [ p-loc < 10 ] [
+      set p-loc p-loc + current-speed
+      set ticks-to-patch ticks-to-patch + 1
+    ]
+    set p-loc p-loc mod 10
+  ]
+  ; report the empty list as no conflicts found
+  report nobody
+end
+
+to-report will-be-at? [ patch-to-check ticks-to-patch ]
+  let other-patch patch-here
+  set other-patch patch-ahead ((speed * ticks-to-patch + patch-loc * 10) / 10)
+  report patch-to-check = other-patch
 end
 
 to check-for-collisions
@@ -537,7 +578,7 @@ freq-east
 freq-east
 0
 100
-100.0
+50.0
 5
 1
 %
@@ -642,9 +683,9 @@ length west-queue
 11
 
 SWITCH
-385
+320
 440
-520
+455
 473
 traffic-light?
 traffic-light?
@@ -664,9 +705,9 @@ passed-cars
 11
 
 SWITCH
-220
+175
 440
-357
+312
 473
 four-way?
 four-way?
@@ -780,6 +821,17 @@ length east-queue
 17
 1
 11
+
+SWITCH
+465
+440
+587
+473
+veh-to-veh?
+veh-to-veh?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
