@@ -388,8 +388,8 @@ GRAPHICS-WINDOW
 17
 -17
 17
-1
-1
+0
+0
 1
 ticks
 30.0
@@ -469,7 +469,7 @@ speed-limit
 speed-limit
 1
 10
-3.0
+10.0
 1
 1
 NIL
@@ -484,7 +484,7 @@ max-accel
 max-accel
 1
 10
-2.0
+10.0
 1
 1
 NIL
@@ -499,7 +499,7 @@ max-brake
 max-brake
 1
 10
-3.0
+10.0
 1
 1
 NIL
@@ -514,7 +514,7 @@ freq-north
 freq-north
 0
 100
-10.0
+100.0
 1
 1
 %
@@ -529,7 +529,7 @@ freq-east
 freq-east
 0
 100
-10.0
+100.0
 1
 1
 %
@@ -686,7 +686,7 @@ freq-south
 freq-south
 0
 100
-10.0
+100.0
 1
 1
 %
@@ -709,10 +709,10 @@ true
 "" ""
 PENS
 "overall" 1.0 0 -16777216 true "" "plot count cars with [ speed = 0 ]"
-"eastbound" 1.0 0 -13345367 true "" "plot count cars with [ heading = 90 and speed = 0 ]"
-"northbound" 1.0 0 -2674135 true "" "plot count cars with [ heading = 0 and speed = 0 ]"
-"southbound" 1.0 0 -7500403 true "" "plot count cars with [ heading = 180 and speed = 0 ]"
-"westbound" 1.0 0 -955883 true "" "plot count cars with [ heading = -90 and speed = 0 ]"
+"eastbound" 1.0 0 -13345367 true "" "plot length east-queue"
+"northbound" 1.0 0 -2674135 true "" "plot length north-queue"
+"southbound" 1.0 0 -7500403 true "" "plot length south-queue"
+"westbound" 1.0 0 -955883 true "" "plot length west-queue"
 
 SLIDER
 5
@@ -723,7 +723,7 @@ freq-west
 freq-west
 0
 100
-10.0
+100.0
 1
 1
 %
