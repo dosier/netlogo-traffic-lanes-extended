@@ -10,14 +10,14 @@ globals [
   east-queue            ;* the car queue for the east lane
   south-queue           ;* the car queue for the south lane
   west-queue            ;* the car queue for the west lane
-  north-light           ;*
-  east-light            ;*
-  south-light           ;*
-  west-light            ;*
-  total-accident        ;*
-  passed-cars           ;*
-  total-wait-time       ;*
-  total-cars            ;*
+  north-light           ;* the north to south traffic light
+  east-light            ;* the east to west traffic light
+  south-light           ;* the south to north traffic light
+  west-light            ;* the west to east traffic light
+  total-accident        ;* the total number of crashes
+  passed-cars           ;* the total number of cars that reached there destination (other side of screen)
+  total-wait-time       ;* the total amount of ticks cars have waited for
+  total-cars            ;* the total amount of cars spawned
 ]
 
 breed [ lights light ]
@@ -29,7 +29,7 @@ accidents-own [
 
 breed [ cars car ]
 cars-own [
-  speed                 ; how fast the car moves per tick (speed 10 is 1 patch per tick)
+  speed                 ;  how fast the car moves per tick (speed 10 is 1 patch per tick)
   wait-ticks            ;* how many ticks the car has been in the queue for
   passed                ;* boolean representing whether car passed traffic lights
   queue-id              ;* id of the queue this car spawned in
@@ -52,6 +52,7 @@ to setup
   set active-queue north-queue               ;*
   set active-second-queue south-queue        ;*
   set total-cars 0                           ;*
+  set total-wait-time 0                      ;*
 
   ; initialise queues (lists) for lanes
   ifelse four-way? [
@@ -141,31 +142,27 @@ to-report filter-queue [queue]                              ;*
       if pycor < 1 [ set queue remove self queue ]          ;*
     ]
     if queue = east-queue[                                  ;*
-      if pxcor > -1 [ set queue remove self queue ]          ;*
+      if pxcor > -1 [ set queue remove self queue ]         ;*
     ]
     if queue = south-queue [
       if pycor > -1 [ set queue remove self queue ]         ;*
     ]
     if queue = west-queue[                                  ;*
-      if pxcor < 1 [ set queue remove self queue ]         ;*
+      if pxcor < 1 [ set queue remove self queue ]          ;*
     ]
   ]
   report queue                                              ;*
 end
 
-; update the active queue if the cum wait time of the passive queue
-; exceeds the cum wait time of the active queue
+; update the active queue if the cum wait time of the passive lanes
+; exceeds the cum wait time of the active lanes
 to update-active-queue                            ;*
+  ; cumulative wait times for cars in the vertical and horizontal lanes.
+  let ver-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue] ;*
+  let hor-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self east-queue]   ;*
 
-  ; sum the values of the 'wait-ticks' variable for the first 'eval-cars' in the provided queue
-  let south-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue] ;*
-  let west-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self east-queue]   ;*
-
-;  show south-queue
-;  show west-queue
-
-  ifelse west-cum-wait > south-cum-wait           ;*
-  [                                               ;*
+  ifelse hor-cum-wait > ver-cum-wait              ;*
+  [
     set active-queue west-queue                   ;*
     set active-second-queue east-queue            ;*
     if not traffic-light? [                       ;*
