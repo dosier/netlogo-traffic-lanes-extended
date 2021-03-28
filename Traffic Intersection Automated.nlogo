@@ -674,7 +674,7 @@ MONITOR
 265
 1375
 310
-Passed car %
+Car accident %
 total-accident / (passed-cars + total-accident) * 100
 3
 1
