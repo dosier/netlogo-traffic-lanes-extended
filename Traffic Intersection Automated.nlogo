@@ -45,38 +45,36 @@ to setup
   set-default-shape lights "square"
   set-default-shape accidents "fire"
   set-default-shape cars "car"
-  set north-queue []                         ;*
-  set east-queue []                          ;*
-  set south-queue []                         ;*
-  set west-queue []                          ;*
-  set active-queue north-queue               ;*
-  set active-second-queue south-queue        ;*
-  set total-cars 0                           ;*
-  set total-wait-time 0                      ;*
+  set north-queue []                                        ;*
+  set east-queue []                                         ;*
+  set south-queue []                                        ;*
+  set west-queue []                                         ;*
+  set active-queue north-queue                              ;*
+  set active-second-queue south-queue                       ;*
+  set total-cars 0                                          ;*
+  set total-wait-time 0                                     ;*
 
   ; initialise queues (lists) for lanes
   ifelse four-way? [
     ask patches [
       ifelse ((1 <= pxcor and pxcor <= 3) or (-3 <= pxcor and pxcor <= -1)) or ((1 <= pycor and pycor <= 3) or (-3 <= pycor and pycor <= -1))
-      [ set pcolor black ]     ; the roads are black
-      [ set pcolor green - 1 ] ; and the grass is green
+      [ set pcolor black ]                                  ; the roads are black
+      [ set pcolor green - 1 ]                              ; the grass is green
     ]
-    ask patch -2 3 [ sprout-lights 1 [ set color red ] ]    ;* North
-    ask patch 3 2 [ sprout-lights 1 [ set color green ] ]   ;* East
-    ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]    ;* South
-    ask patch -3 -2 [ sprout-lights 1 [ set color green ] ] ;* West
+    ask patch -2 3 [ sprout-lights 1 [ set color red ] ]    ;* north
+    ask patch 3 2 [ sprout-lights 1 [ set color green ] ]   ;* east
+    ask patch 2 -3 [ sprout-lights 1 [ set color red ] ]    ;* south
+    ask patch -3 -2 [ sprout-lights 1 [ set color green ] ] ;* west
     set north-light one-of lights at-points [[-2 3]]        ;*
     set east-light one-of lights at-points [[3 2]]          ;*
     set south-light one-of lights at-points [[2 -3]]        ;*
     set west-light one-of lights at-points [[-3 -2]]        ;*
-
-
   ]
   [
     ask patches [
       ifelse abs pxcor <= 1 or abs pycor <= 1
-      [ set pcolor black ]     ; the roads are black
-      [ set pcolor green - 1 ] ; and the grass is green
+      [ set pcolor black ]                                  ; the roads are black
+      [ set pcolor green - 1 ]                              ; the grass is green
     ]
     ask patch 0 -1 [ sprout-lights 1 [ set color green ] ]
     ask patch -1 0 [ sprout-lights 1 [ set color red ] ]
@@ -91,12 +89,12 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;
 
 to go
-  if ticks >= 5000 [        ;*
-    stop                    ;*
+  if ticks >= 5000 [                                                       ;*
+    stop                                                                   ;*
   ]
   ask cars [ move ]
   check-for-collisions
-  ifelse four-way?          ;*
+  ifelse four-way?                                                         ;*
   [
     set north-queue filter-queue north-queue                               ;*
     set east-queue filter-queue east-queue                                 ;*
@@ -123,7 +121,6 @@ to go
     if auto? and elapsed? green-length [
       change-to-yellow
     ]
-
     ; if a light has been yellow for long enough,
     ; we turn it red and turn the other one green
     if any? lights with [ color = yellow ] and elapsed? yellow-length [
@@ -158,7 +155,7 @@ end
 ; exceeds the cum wait time of the active lanes
 to update-active-queue                            ;*
   ; cumulative wait times for cars in the vertical and horizontal lanes.
-  let ver-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue] ;*
+  let ver-cum-wait sum [wait-ticks] of turtles with [member? self south-queue or member? self north-queue]  ;*
   let hor-cum-wait  sum [wait-ticks] of turtles with [member? self west-queue or member? self east-queue]   ;*
 
   ifelse hor-cum-wait > ver-cum-wait              ;*
@@ -207,19 +204,18 @@ end
 to move ; turtle procedure
   adjust-speed
   update-wait-ticks                                 ;*
-  repeat speed [ ; move ahead the correct amount
+  repeat speed [                                    ; move ahead the correct amount
     if patch-loc >= 1.0 [                           ;*
       fd 1
       if not can-move? 1 [
         set passed-cars passed-cars + 1
-        die ; die when I reach the end of the world
+        die                                         ; die when I reach the end of the world
       ]
       set patch-loc 0.0                             ;*
     ]
     set patch-loc patch-loc + 0.1                   ;*
     if any? accidents-here [
-      ; if I hit an accident, I cause another one
-      ask accidents-here [ set clear-in 1 ]
+      ask accidents-here [ set clear-in 1 ]         ; if I hit an accident, I cause another one
       die
     ]
   ]
@@ -297,7 +293,7 @@ to-report is-blocked? [ target-patch ] ; turtle reporter
     any? accidents-on target-patch or
     any? (lights-on target-patch) with [ color = red ] or
     (any? (lights-on target-patch) with [ color = yellow ] and
-      ; only stop for a yellow light if I'm not already on it:
+      ; only stop for a yellow light if I'm not already on it
       target-patch != patch-here)
 end
 
@@ -329,14 +325,14 @@ to update-light [col]                ;*
   set ticks-at-last-change ticks     ;*
 end
 
-to-report is-west-light [l]                                              ;*
-  ifelse four-way? [ report l = west-light or l = east-light ]           ;*
-  [ report l = west-light ]                                              ;*
+to-report is-west-light [l]                                      ;*
+  ifelse four-way? [ report l = west-light or l = east-light ]   ;*
+  [ report l = west-light ]                                      ;*
 end
 
-to-report is-south-light [l]                                               ;*
-  ifelse four-way? [ report l = south-light or l = north-light ]           ;*
-  [ report l = south-light ]                                               ;*
+to-report is-south-light [l]                                     ;*
+  ifelse four-way? [ report l = south-light or l = north-light ] ;*
+  [ report l = south-light ]                                     ;*
 end
 
 to change-to-red
