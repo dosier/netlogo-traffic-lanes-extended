@@ -34,7 +34,6 @@ cars-own [
   speed                 ;  how fast the car moves per tick (speed 10 is 1 patch per tick)
   wait-ticks            ;* how many ticks the car has been in the queue for
   passed                ;* boolean representing whether car passed traffic lights
-  queue-id              ;* id of the queue this car spawned in
   patch-loc             ;* The fraction of the patch that has been passed
 ]
 
@@ -88,10 +87,10 @@ to go
   set east-queue filter-queue east-queue                                 ;*
   set south-queue filter-queue south-queue                               ;*
   set west-queue filter-queue west-queue                                 ;*
-  set north-queue make-new-car freq-south -2 max-pycor 180 north-queue 0 ;*
-  set east-queue make-new-car freq-west min-pxcor -2 90 east-queue 1     ;*
-  set south-queue make-new-car freq-north 2 min-pycor 0 south-queue 2    ;*
-  set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue 3     ;*
+  set north-queue make-new-car freq-south -2 max-pycor 180 north-queue   ;*
+  set east-queue make-new-car freq-west min-pxcor -2 90 east-queue       ;*
+  set south-queue make-new-car freq-north 2 min-pycor 0 south-queue      ;*
+  set west-queue make-new-car freq-east max-pxcor 2 -90 west-queue       ;*
 
   update-active-queue                                                      ;*
 
@@ -145,8 +144,8 @@ to update-active-queue                            ;*
     if not traffic-light? [                       ;*
       ask west-light [ set color green ]          ;*
       ask south-light [ set color red ]           ;*
-      ask east-light [ set color green ]        ;*
-      ask north-light [ set color red ]         ;*
+      ask east-light [ set color green ]          ;*
+      ask north-light [ set color red ]           ;*
     ]
   ]
   [
@@ -155,13 +154,13 @@ to update-active-queue                            ;*
     if not traffic-light? [                        ;*
       ask south-light [ set color green ]          ;*
       ask west-light [ set color red ]             ;*
-      ask east-light [ set color red ]           ;*
-      ask north-light [ set color green ]        ;*
+      ask east-light [ set color red ]             ;*
+      ask north-light [ set color green ]          ;*
     ]
   ]
 end
 
-to-report make-new-car [ freq x y h queue queue-identifier]
+to-report make-new-car [ freq x y h queue ]
   if (random-float 100 < freq) and not any? turtles-on patch x y [
     create-cars 1 [
       setxy x y
@@ -169,7 +168,6 @@ to-report make-new-car [ freq x y h queue queue-identifier]
       set color one-of base-colors
       set passed false                 ;*
       set queue lput self queue        ;* add car at end of queue
-      set queue-id queue-identifier    ;* id of the queue
       set total-cars total-cars + 1    ;*
       set patch-loc 0.0                ;*
       adjust-speed
@@ -220,7 +218,7 @@ to-report is-waiting                                                       ;*
     and speed = 0                                                          ;*
 end
 
-to adjust-speed ; turtle procedure
+to adjust-speed ; car procedure
 
   ; calculate the minimum and maximum possible speed I could go
   let min-speed max (list (speed - max-brake) 0)
@@ -257,7 +255,7 @@ to-report is-safe-speed? [ speed-at-this-tick space-ahead] ; car reporter, takes
   report space-travelled <= space-ahead                       ;*
 end
 
-to-report next-blocked-patch ; turtle procedure
+to-report next-blocked-patch ; car procedure
   ; check all patches ahead until I find a blocked
   ; patch or I reach the end of the world
   let patch-to-check patch-here
@@ -268,7 +266,7 @@ to-report next-blocked-patch ; turtle procedure
   report patch-to-check
 end
 
-to-report is-blocked? [ target-patch ] ; turtle reporter
+to-report is-blocked? [ target-patch ] ; car reporter
   report
     any? other cars-on target-patch or
     any? accidents-on target-patch or
@@ -460,7 +458,7 @@ max-accel
 max-accel
 1
 10
-2.0
+5.0
 1
 1
 NIL
