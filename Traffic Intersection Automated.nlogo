@@ -206,16 +206,9 @@ to move ; turtle procedure
 end
 
 to update-wait-ticks                    ;*
-  if is-waiting [                       ;*
+  if not passed and speed = 0 [         ;*
     set wait-ticks wait-ticks + 1       ;*
   ]
-end
-
-; check if the car is before the intersection and its speed is 0
-to-report is-waiting                                                       ;*
-  report                                                                   ;*
-    not passed                                                             ;*
-    and speed = 0                                                          ;*
 end
 
 to adjust-speed ; car procedure
