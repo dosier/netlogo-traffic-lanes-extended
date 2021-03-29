@@ -488,7 +488,7 @@ freq-north
 freq-north
 0
 100
-5.0
+10.0
 1
 1
 %
@@ -614,7 +614,7 @@ SWITCH
 473
 traffic-light?
 traffic-light?
-0
+1
 1
 -1000
 
@@ -649,7 +649,7 @@ freq-south
 freq-south
 0
 100
-5.0
+10.0
 1
 1
 %
