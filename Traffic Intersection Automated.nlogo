@@ -458,7 +458,7 @@ max-accel
 max-accel
 1
 10
-5.0
+2.0
 1
 1
 NIL
@@ -503,7 +503,7 @@ freq-east
 freq-east
 0
 100
-5.0
+10.0
 1
 1
 %
@@ -686,7 +686,7 @@ freq-west
 freq-west
 0
 100
-5.0
+10.0
 1
 1
 %
@@ -1196,7 +1196,7 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment-diff" repetitions="10" runMetricsEveryStep="false">
+  <experiment name="experiment-diff" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="5000"/>
@@ -1238,7 +1238,7 @@ NetLogo 6.2.0
       <value value="70"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment-10" repetitions="10" runMetricsEveryStep="false">
+  <experiment name="experiment-10" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="5000"/>
@@ -1280,7 +1280,7 @@ NetLogo 6.2.0
       <value value="70"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment-5" repetitions="10" runMetricsEveryStep="false">
+  <experiment name="experiment-5" repetitions="20" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="5000"/>
