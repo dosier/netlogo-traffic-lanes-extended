@@ -490,7 +490,7 @@ freq-north
 freq-north
 0
 100
-10.0
+5.0
 1
 1
 %
@@ -505,7 +505,7 @@ freq-east
 freq-east
 0
 100
-10.0
+5.0
 1
 1
 %
@@ -616,7 +616,7 @@ SWITCH
 473
 traffic-light?
 traffic-light?
-1
+0
 1
 -1000
 
@@ -651,7 +651,7 @@ freq-south
 freq-south
 0
 100
-10.0
+5.0
 1
 1
 %
@@ -688,7 +688,7 @@ freq-west
 freq-west
 0
 100
-10.0
+5.0
 1
 1
 %
@@ -1197,6 +1197,134 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment-diff" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="5000"/>
+    <metric>passed-cars</metric>
+    <metric>mean-wait-time</metric>
+    <metric>variance-wait-time</metric>
+    <enumeratedValueSet variable="max-accel">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-south">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-east">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="yellow-length">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="traffic-light?">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="auto?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-west">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="speed-limit">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-brake">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-north">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="green-length">
+      <value value="70"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-10" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="5000"/>
+    <metric>passed-cars</metric>
+    <metric>mean-wait-time</metric>
+    <metric>variance-wait-time</metric>
+    <enumeratedValueSet variable="max-accel">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-south">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-east">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="yellow-length">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="traffic-light?">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="auto?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-west">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="speed-limit">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-brake">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-north">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="green-length">
+      <value value="70"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-5" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="5000"/>
+    <metric>passed-cars</metric>
+    <metric>mean-wait-time</metric>
+    <metric>variance-wait-time</metric>
+    <enumeratedValueSet variable="max-accel">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-south">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-east">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="yellow-length">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="traffic-light?">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="auto?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-west">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="speed-limit">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-brake">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="freq-north">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="green-length">
+      <value value="70"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
