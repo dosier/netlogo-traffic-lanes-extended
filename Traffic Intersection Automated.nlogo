@@ -743,35 +743,49 @@ variance-wait-time
 @#$#@#$#@
 ## WHAT IS IT?
 
-In this model the turtles are cars traveling through an intersection.  The user has the ability to control the frequency of cars coming from each direction, the speed of the cars, and the timing of the light at the traffic intersection.  Once the frequency and speed of cars is selected, the user should run the simulation and adjust the timing of the traffic light so as to minimize the amount of waiting time of cars traveling through the intersection.
+This model is an extension of the Traffic Intersection model in the model library. As in the previous version, the user can control the frequency of vehicles coming from each direction, the speed of the vehicle and the timing of the lights at traffic intersections. In addition, in the extended model, an option has been added that allows automatic control of vehicles driving at intersections. In addition, users can compare the average waiting time of cars and the number of vehicles passing through the intersection by making the number of roads at the intersection into two lanes.*
 
 ## HOW IT WORKS
 
 The rules for each car are:
 
-- I can only go in the direction I started in, or stop.
+- Cars can only go straight.*
 
-- I stop for cars in front of me and red lights, and I stop for a yellow light if I'm not already on it.
+- The car stops for the car in front and the red light, and if the car has not yet entered the traffic light, the car stops for a yellow light.*
 
-- If I am moving quickly and I see that I will have to stop soon, I try to slow down enough to make sure I can stop in time, up to MAX-BRAKE.
+- If the car's speed is fast and it seems like it should stop soon, according to the MAX-BRAKE's setting, the car will try to slow it down enough so that it can stop in time.*
 
-- If I see that I have free space in front of me, I speed up towards the SPEED-LIMIT, up to MAX-ACCEL.
+- When it is confirmed that there is free space in front of the car, speed up to SPEED-LIMIT according to the MAX-ACCEL setting value.*
 
-- If I am on the same space as another car, we crash and die.
+- If a cars crashes, an accident occurs and the cars are removed.*
 
 ## HOW TO USE IT
 
-WAIT-TIME-OVERALL shows how many cars are waiting during the given clock tick.
+AVERAGE WAIT TIME shows the average of the time waiting on the road by cars waiting to cross the intersection.*
 
-WAIT-TIME-EASTBOUND shows how many eastbound cars are waiting during the given clock tick.
+PASSED-CARS shows the number of cars passing through the intersection during the tick.*
 
-WAIT-TIME-NORTHBOUND shows how many northbound cars are waiting during the given clock tick.
+TOTAL-ACCIDENT shows the number of accidents that occurred during the tick.*
 
-CLOCK shows how many ticks have elapsed.
+WAITING-NORTHBOUND shows how many northbound cars are waiting during the given clock tick.*
 
-Use the FREQ-EAST slider to select how often new eastbound cars travel on the road.
+WAITING-SOUTHBOUND shows how many southbound cars are waiting during the given clock tick.*
 
-Use the FREQ-NORTH slider to select how often new northbound cars travel on the road.
+WAITING-EASTBOUND shows how many eastbound cars are waiting during the given clock tick.*
+
+WAITING-WESTBOUND shows how many westbound cars are waiting during the given clock tick.*
+
+Use the four-way? to chagne the normal intersection to the four-way intersection.*
+
+Use the traffic-light? to make the car move autonomously and control the light according to the car's behavior.*
+
+Use the FREQ-EAST slider to select how often new eastbound cars travel on the road.*
+
+Use the FREQ-NORTH slider to select how often new northbound cars travel on the road.*
+
+Use the FREQ-WEST slider to select how often new westbound cars travel on the road.*
+
+Use the FREQ-SOUTH slider to select how often new southbound cars travel on the road.*
 
 Use the SPEED-LIMIT slider to select how fast the cars will travel.
 
@@ -843,57 +857,11 @@ What factor (or combination of factors) has the most influence over the waiting 
 
 Find a realistic way to eliminate all crashes by only changing car behavior.
 
-Allow different light lengths for each direction in order to control wait time better.
-
-Is there a better way to measure the efficiency of an intersection than the current number of stopped cars?
+Try moving the car to the left and right as in real life to smooth the flow of traffic.*
 
 ## RELATED MODELS
 
-- "Traffic Basic": a simple model of the movement of cars on a highway.
-
-- "Traffic Basic Utility": a version of "Traffic Basic" including a utility function for the cars.
-
-- "Traffic Basic Adaptive": a version of "Traffic Basic" where cars adapt their acceleration to try and maintain a smooth flow of traffic.
-
-- "Traffic Basic Adaptive Individuals": a version of "Traffic Basic Adaptive" where each car adapts individually, instead of all cars adapting in unison.
-
-- "Traffic 2 Lanes": a more sophisticated two-lane version of the "Traffic Basic" model.
-
-- "Traffic Grid": a model of traffic moving in a city grid, with stoplights at the intersections.
-
-- "Traffic Grid Goal": a version of "Traffic Grid" where the cars have goals, namely to drive to and from work.
-
-- "Gridlock HubNet": a version of "Traffic Grid" where students control traffic lights in real-time.
-
-- "Gridlock Alternate HubNet": a version of "Gridlock HubNet" where students can enter NetLogo code to plot custom metrics.
-
-## HOW TO CITE
-
-If you mention this model or the NetLogo software in a publication, we ask that you include the citations below.
-
-For the model itself:
-
-* Wilensky, U. (1998).  NetLogo Traffic Intersection model.  http://ccl.northwestern.edu/netlogo/models/TrafficIntersection.  Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-Please cite the NetLogo software as:
-
-* Wilensky, U. (1999). NetLogo. http://ccl.northwestern.edu/netlogo/. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-## COPYRIGHT AND LICENSE
-
-Copyright 1998 Uri Wilensky.
-
-![CC BY-NC-SA 3.0](http://ccl.northwestern.edu/images/creativecommons/byncsa.png)
-
-This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.  To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/3.0/ or send a letter to Creative Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
-
-Commercial licenses are also available. To inquire about commercial licenses, please contact Uri Wilensky at uri@northwestern.edu.
-
-This model was created as part of the project: CONNECTED MATHEMATICS: MAKING SENSE OF COMPLEX PHENOMENA THROUGH BUILDING OBJECT-BASED PARALLEL MODELS (OBPML).  The project gratefully acknowledges the support of the National Science Foundation (Applications of Advanced Technologies Program) -- grant numbers RED #9552950 and REC #9632612.
-
-This model was converted to NetLogo as part of the projects: PARTICIPATORY SIMULATIONS: NETWORK-BASED DESIGN FOR SYSTEMS LEARNING IN CLASSROOMS and/or INTEGRATED SIMULATION AND MODELING ENVIRONMENT. The project gratefully acknowledges the support of the National Science Foundation (REPP & ROLE programs) -- grant numbers REC #9814682 and REC-0126227. Converted from StarLogoT to NetLogo, 2002.
-
-<!-- 1998 2002 -->
+- "Traffic Intersection": a simple model of the movement of cars on the intersection.
 @#$#@#$#@
 default
 true
