@@ -743,7 +743,7 @@ variance-wait-time
 @#$#@#$#@
 ## WHAT IS IT?
 
-This model is an extension of the Traffic Intersection model in the model library. As in the previous version, the user can control the frequency of vehicles coming from each direction, the speed of the vehicle and the timing of the lights at traffic intersections. In addition, in the extended model, an option has been added that allows automatic control of vehicles driving at intersections. In addition, users can compare the average waiting time of cars and the number of vehicles passing through the intersection by making the number of roads at the intersection into two lanes.*
+This model is an extension of the Traffic Intersection model in the model library. The original model was developed by Uri Wilenksy. This original model contained a simple two way intersection controlled by traffic lights. This model was extended to a four way interesction and the traffic lights can be toggled on or off. If the traffic light is off, a lane prioritisaion system will manage the traffic flow. As in the original version, the user can control the frequency of vehicles coming from each direction, the speed of the vehicle and the timing of the lights at traffic intersections. In addition, in the extended model, an option has been added that allows automatic control of vehicles driving at intersections. In addition, users can compare the average waiting time of cars and the number of vehicles passing through the intersection by making the number of roads at the intersection into two lanes.*
 
 ## HOW IT WORKS
 
@@ -775,9 +775,7 @@ WAITING-EASTBOUND shows how many eastbound cars are waiting during the given clo
 
 WAITING-WESTBOUND shows how many westbound cars are waiting during the given clock tick.*
 
-Use the four-way? to chagne the normal intersection to the four-way intersection.*
-
-Use the traffic-light? to make the car move autonomously and control the light according to the car's behavior.*
+Use the traffic-light? switch to determine wether the traffic lights are active (on) or the lane prioritization is active (off). *
 
 Use the FREQ-EAST slider to select how often new eastbound cars travel on the road.*
 
